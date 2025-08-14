@@ -1,15 +1,11 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29806.167
-MinimumVisualStudioVersion = 10.0.40219.1
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToradoraTranslateTool", "ToradoraTranslateTool\ToradoraTranslateTool.csproj", "{AE5D7ADD-9B69-4CA7-8060-A48CF665A821}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OBJEditor", "OBJEditor\OBJEditor.csproj", "{982F6A65-F0D6-4AAE-8C13-03C2F8A36ABC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatWorker", "DatWorker\DatWorker.csproj", "{6C767FD1-CBC7-40FA-A8BD-ACE61E4D3FC2}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tenoritool", "tenoritool\tenoritool.csproj", "{2081BDDC-A099-4408-82BA-2436F5860A4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatWorker", "DatWorker\DatWorker.csproj", "{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,23 +26,17 @@ Global
 		{982F6A65-F0D6-4AAE-8C13-03C2F8A36ABC}.DebugTests|Any CPU.Build.0 = Debug|Any CPU
 		{982F6A65-F0D6-4AAE-8C13-03C2F8A36ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{982F6A65-F0D6-4AAE-8C13-03C2F8A36ABC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6C767FD1-CBC7-40FA-A8BD-ACE61E4D3FC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C767FD1-CBC7-40FA-A8BD-ACE61E4D3FC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6C767FD1-CBC7-40FA-A8BD-ACE61E4D3FC2}.DebugTests|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C767FD1-CBC7-40FA-A8BD-ACE61E4D3FC2}.DebugTests|Any CPU.Build.0 = Debug|Any CPU
-		{6C767FD1-CBC7-40FA-A8BD-ACE61E4D3FC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6C767FD1-CBC7-40FA-A8BD-ACE61E4D3FC2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2081BDDC-A099-4408-82BA-2436F5860A4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2081BDDC-A099-4408-82BA-2436F5860A4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2081BDDC-A099-4408-82BA-2436F5860A4D}.DebugTests|Any CPU.ActiveCfg = DebugTests|Any CPU
 		{2081BDDC-A099-4408-82BA-2436F5860A4D}.DebugTests|Any CPU.Build.0 = DebugTests|Any CPU
 		{2081BDDC-A099-4408-82BA-2436F5860A4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2081BDDC-A099-4408-82BA-2436F5860A4D}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {DEA3C6CD-7F2D-464F-9DBA-0A3F35A9A005}
+		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.DebugTests|Any CPU.ActiveCfg = Debug|Any CPU
+		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.DebugTests|Any CPU.Build.0 = Debug|Any CPU
+		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

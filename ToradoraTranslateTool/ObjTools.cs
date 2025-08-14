@@ -7,7 +7,6 @@ using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using OBJEditor;
-using SevenZip;
 
 namespace ToradoraTranslateTool
 {
