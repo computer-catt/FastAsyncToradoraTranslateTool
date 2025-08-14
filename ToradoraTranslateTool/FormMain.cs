@@ -62,7 +62,7 @@ namespace ToradoraTranslateTool
         {
             try
             {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                using (OpenFileDialog openFileDialog = new())
                 {
                     openFileDialog.Filter = "Toradora ISO (*.iso) | *.iso";
 
@@ -70,9 +70,15 @@ namespace ToradoraTranslateTool
                     {
                         ChangeStatus(true);
                         DisableButtons();
-
-                        await Task.Run(() => IsoTools.ExtractIso(openFileDialog.FileName));
-
+                        
+                        IsoProgress.Value = 0;
+                        buttonExtractIso.Visible = false;
+                        
+                        await Task.Run(() => IsoTools.ExtractIso(openFileDialog.FileName, progress => IsoProgress.Value = progress));
+                        
+                        buttonExtractIso.Visible = true;
+                        IsoProgress.Value = 0;
+                        
                         ChangeStatus(false);
                         EnableButtons();
 

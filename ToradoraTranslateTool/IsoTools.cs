@@ -1,20 +1,25 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using SevenZipExtractor;
+using SevenZip;
 
 namespace ToradoraTranslateTool
 {
     class IsoTools
     {
-        public static void ExtractIso(string isoPath)
+        public static void ExtractIso(string isoPath, Action<byte> progressCallback = null)
         {
             if (!Directory.Exists(Path.Combine(Application.StartupPath, "Data", "Iso")))
                 Directory.CreateDirectory(Path.Combine(Application.StartupPath, "Data", "Iso"));
             
-            //SevenZipExtractor.SetLibraryPath(Path.Combine(Application.StartupPath, "Bin" ,"7z.dll"));
-            ArchiveFile mySze = new(isoPath);
-            mySze.Extract(Path.Combine(Application.StartupPath, "Data", "Iso"));
+            SevenZipBase.SetLibraryPath(Path.Combine(Application.StartupPath, "Bin", RuntimeInformation.OSArchitecture == Architecture.X64 ? "7z X64.dll" : "7z X86.dll"));
+            SevenZipExtractor mySze = new(isoPath);
+            if (progressCallback != null)
+                mySze.Extracting += (_, args) => { progressCallback.Invoke(args.PercentDone); };
+            
+            mySze.ExtractArchive(Path.Combine(Application.StartupPath, "Data", "Iso"));
             mySze.Dispose();
         }
 

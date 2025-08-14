@@ -8,11 +8,12 @@
         <ProjectGuid>{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}</ProjectGuid>
         <OutputType>Exe</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>DatWorkerFramework</RootNamespace>
-        <AssemblyName>DatWorkerFramework</AssemblyName>
+        <RootNamespace>DatWorker</RootNamespace>
+        <AssemblyName>DatWorker</AssemblyName>
         <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>

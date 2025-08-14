@@ -23,6 +23,7 @@
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <Prefer32bit>false</Prefer32bit>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +33,7 @@
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <Prefer32bit>false</Prefer32bit>
     </PropertyGroup>
     <PropertyGroup>
         <ApplicationIcon>white.ico</ApplicationIcon>
@@ -90,6 +92,12 @@
             <DesignTime>True</DesignTime>
         </Compile>
         <None Include="app.config"/>
+        <Content Include="7z X64.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="7z X86.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
         <Content Include="Data\DatWorker\Workspace\!xp.bat">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
@@ -129,9 +137,6 @@
         </Compile>
     </ItemGroup>
     <ItemGroup>
-        <Content Include="Data\DatWorker\Dat Worker.exe">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
         <Content Include="Data\DatWorker\Workspace\gzip.exe">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
@@ -451,6 +456,10 @@
         <Content Include="white.ico" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\DatWorker\DatWorker.csproj">
+          <Project>{38cf6dce-4a7a-4dc5-9540-fd0b9e5ecc19}</Project>
+          <Name>DatWorker</Name>
+        </ProjectReference>
         <ProjectReference Include="..\OBJEditor\OBJEditor.csproj">
             <Project>{982f6a65-f0d6-4aae-8c13-03c2f8a36abc}</Project>
             <Name>OBJEditor</Name>
@@ -464,8 +473,8 @@
         <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
             <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
         </Reference>
-        <Reference Include="SevenZipExtractor, Version=1.0.19.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>..\packages\SevenZipExtractor.1.0.19\lib\net45\SevenZipExtractor.dll</HintPath>
+        <Reference Include="SevenZipSharp, Version=1.6.2.24, Culture=neutral, PublicKeyToken=c8ff6ba0184838bb, processorArchitecture=MSIL">
+          <HintPath>..\packages\Squid-Box.SevenZipSharp.Lite.1.6.2.24\lib\net472\SevenZipSharp.dll</HintPath>
         </Reference>
         <Reference Include="System"/>
         <Reference Include="System.Data"/>
@@ -483,11 +492,4 @@
             xcopy /y /d  "$(TargetDir)\*.xml" "$(TargetDir)Bin\"
             del "$(TargetDir)\*.xml"</PostBuildEvent>
     </PropertyGroup>
-    <Import Project="..\packages\SevenZipExtractor.1.0.19\build\SevenZipExtractor.targets" Condition="Exists('..\packages\SevenZipExtractor.1.0.19\build\SevenZipExtractor.targets')" />
-    <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-        <PropertyGroup>
-            <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
-        </PropertyGroup>
-        <Error Condition="!Exists('..\packages\SevenZipExtractor.1.0.19\build\SevenZipExtractor.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SevenZipExtractor.1.0.19\build\SevenZipExtractor.targets'))" />
-    </Target>
 </Project>
