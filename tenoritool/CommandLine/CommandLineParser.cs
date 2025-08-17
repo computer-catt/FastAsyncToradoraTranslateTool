@@ -39,7 +39,7 @@ namespace CommandLine
     /// </summary>
     public class CommandLineParser : ICommandLineParser
     {
-        private object valueListLock = new object();
+        private object valueListLock = new();
 
         /// <summary>
         /// Parses a <see cref="System.String"/> array of command line arguments,
@@ -101,7 +101,7 @@ namespace CommandLine
                 string helpText;
                 HelpOptionAttribute.InvokeMethod(options, pair, true, out helpText);
                 helpWriter.Write(helpText);
-                helpWriter.Write(String.Format("Incorrect use of parameter: {0}", args[erroneousArgumentIndex]));
+                helpWriter.Write($"Incorrect use of parameter: {args[erroneousArgumentIndex]}");
                 return false;
             }
             return true;

@@ -38,7 +38,7 @@ namespace GSSUtils
         public static string GetBaseName(string absolutePath, string path)
         {
             string baseName = path.Remove(0, absolutePath.Length);
-            if (baseName.StartsWith(PathUtility.DirectorySeparatorString))
+            if (baseName.StartsWith(DirectorySeparatorString))
             {
                 baseName = baseName.Remove(0, 1);
             }

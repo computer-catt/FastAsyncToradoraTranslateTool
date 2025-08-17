@@ -26,350 +26,303 @@
 // THE SOFTWARE.
 #endregion
 
-namespace tenoritool
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.IO;
-    using System.Text;
+namespace tenoritool;
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+using CommandLine;
+using CommandLine.Text;
+
+static partial class TenoriTool {
+    #region Exit Code Constants
+
+    private const int ExitSuccess = 0;
+    private const int ExitFailure = 1;
+    private const int ExitFailureCritical = 2;
+
+    #endregion
+
+    private static readonly HeadingInfo Heading = new(ThisAssembly.Name, ThisAssembly.MajorMinorVersion);
+    private static readonly ConsoleColor HighlightColor = ConsoleColor.Yellow;
+    private static readonly UInt32 TenoriSigConst = BinaryIO.ReadUInt32("GPDA"u8.ToArray()); // "GPDA", Guyzware Packed Data Archive
+    private static readonly UInt32 TenoriEntrySize = 0x10;
 
 
-    using GSSUtils;
+    private static void Main(string[] args) {
+        Options options = new();
+        ICommandLineParser parser = new CommandLineParser();
+        if (!parser.ParseArguments(args, options, Console.Error)) {
+            Environment.Exit(ExitFailure);
+        }
 
-    using CommandLine;
-    using CommandLine.Text;
+        if (!options.Validate()) {
+            Console.Error.WriteLine("Try '{0} --help' for more information.", ThisAssembly.Name);
+            Environment.Exit(ExitFailure);
+        }
 
-    static partial class TenoriTool
-    {
-        #region Exit Code Constants
-        private const int EXIT_SUCCESS = 0;
-        private const int EXIT_FAILURE = 1;
-        private const int EXIT_FAILURE_CRITICAL = 2;
+        if (options.Verbose) {
+            Console.ForegroundColor = HighlightColor;
+            Console.Error.WriteLine(Heading.ToString());
+            Console.ResetColor();
+        }
+
+        bool success = true;
+        if (!options.UsePackMode) {
+            if (options.UseExtractMode)
+                options.ExtractStub = ExtractEntry; // use real function
+            success = ProcessIterationExtract(options);
+        }
+
+        #region Helper Code while running inside an IDE (uncomment when needed)
+
+        //Console.ForegroundColor = ConsoleColor.Green;
+        //Console.Write(">>>press any key<<<");
+        //Console.ResetColor();
+        //Console.ReadKey();
+
         #endregion
-        internal static HeadingInfo Heading = new HeadingInfo(ThisAssembly.Name, ThisAssembly.MajorMinorVersion);
-        internal static ConsoleColor HighlightColor = ConsoleColor.Yellow;
-        internal static UInt32 TENORI_SIG_CONST = BinaryIO.ReadUInt32(new byte[] { 0x47, 0x50, 0x44, 0x41 });  // "GPDA", Guyzware Packed Data Archive
-        internal static UInt32 TENORI_ENTRY_SIZE = 0x10;
+
+        Environment.Exit(success ? ExitSuccess : ExitFailureCritical);
+    }
 
 
-        private static void Main(string[] args)
-        {
-            Options options = new Options();
-            ICommandLineParser parser = new CommandLineParser();
-            if (!parser.ParseArguments(args, options, Console.Error))
-            {
-                Environment.Exit(EXIT_FAILURE);
+    private static bool ProcessIterationExtract(Options options) {
+        bool hasError = false;
+        foreach (string inpath in options.Paths) {
+            string displayFilename;
+
+            bool isStdInput = inpath.Equals("-", StringComparison.InvariantCulture);
+            if (isStdInput) {
+                displayFilename = "<STDIN>";
             }
-            if (!options.Validate())
-            {
-                Console.Error.WriteLine("Try '{0} --help' for more information.", ThisAssembly.Name);
-                Environment.Exit(EXIT_FAILURE);
+            else {
+                displayFilename = Path.GetFileName(inpath);
             }
 
-            if (options.Verbose)
-            {
-                Console.ForegroundColor = TenoriTool.HighlightColor;
-                Console.Error.WriteLine(Heading.ToString());
+            if (options.Verbose) {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Error.WriteLine($"* {displayFilename}");
                 Console.ResetColor();
             }
 
-            bool success = true;
-            if ( !options.UsePackMode )
-            {
-                if ( options.UseExtractMode )
-                {
-                    options.ExtractStub = new Options.ExtractDelegate(ExtractEntry);  // use real function
+            if (!isStdInput) {
+                string ioerror = String.Empty;
+                try {
+                    FileAttributes attributes = File.GetAttributes(inpath);
+                    FileInfo infile = new(inpath);
+                    if ((attributes & FileAttributes.Directory) == FileAttributes.Directory || !infile.Exists) {
+                        ioerror = "does not exist or is a directory";
+                    }
+                    else {
+                        if (options.Verbose) {
+                            Console.Error.WriteLine($"    Reported size: {infile.Length}");
+                        }
+
+                        string errorString;
+                        if (!ProcessIndividualExtract(options, "", inpath, out errorString)) {
+                            ioerror = errorString;
+                        }
+                    }
                 }
-                success = ProcessIterationExtract(options);
+                catch (IOException ex) {
+                    ioerror = ex.Message;
+                }
+                catch (UnauthorizedAccessException ex) {
+                    ioerror = ex.Message;
+                }
+                catch (Exception ex) {
+                    ReportError($"{inpath}: unexpected exception occured ({ex.Message})");
+                    throw;
+                }
+
+                if (ioerror.Length <= 0) continue;
+                ReportError($"cannot open {inpath}: {ioerror}");
+                hasError = true;
             }
-
-            #region Helper Code while running inside an IDE (uncomment when needed)
-            //Console.ForegroundColor = ConsoleColor.Green;
-            //Console.Write(">>>press any key<<<");
-            //Console.ResetColor();
-            //Console.ReadKey();
-            #endregion
-
-            Environment.Exit(success ? EXIT_SUCCESS : EXIT_FAILURE_CRITICAL);
         }
 
+        return !hasError;
+    }
 
-        private static bool ProcessIterationExtract(Options options)
-        {
-            bool hasError = false;
-            foreach ( string inpath in options.Paths )
-            {
-                string displayFilename;
+    private static bool ProcessIndividualExtract(Options options, string baseSubdirectory, string path, out string stringError) {
+        stringError = "";
+        List<string> filenames = new();
 
-                bool isStdInput = inpath.Equals("-", System.StringComparison.InvariantCulture);
-                if ( isStdInput )
-                {
-                    displayFilename = "<STDIN>";
-                }
-                else
-                {
-                    displayFilename = Path.GetFileName(inpath);
-                }
-                if ( options.Verbose )
-                {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Error.WriteLine(String.Format("* {0}", displayFilename));
-                    Console.ResetColor();
-                }
-                if ( !isStdInput )
-                {
-                    string ioerror = String.Empty;
-                    try
-                    {
-                        FileAttributes attributes = File.GetAttributes(inpath);
-                        FileInfo infile = new FileInfo(inpath);
-                        if ( ((attributes & FileAttributes.Directory) == FileAttributes.Directory) || !infile.Exists )
-                        {
-                            ioerror = "does not exist or is a directory";
-                        }
-                        else
-                        {
-                            if ( options.Verbose )
-                            {
-                                Console.Error.WriteLine(String.Format("    Reported size: {0}", infile.Length));
-                            }
+        // Only try catching when reading is not possible (not enough input/space)
+        using (BinaryReader reader = new(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Encoding.Default)) {
+            byte[] header = reader.ReadBytes(0x10);
+            UInt32 sig = BinaryIO.ReadUInt32(header, 0x00);
+            if (sig != TenoriSigConst) {
+                stringError = $"magic constant mismatch, found 0x{sig:08X}";
+                return false;
+            }
 
-                            string errorString;
-                            if ( !ProcessIndividualExtract(options, "", inpath, out errorString) )
-                            {
-                                ioerror = errorString;
-                            }
-                        }
-                    }
-                    catch ( IOException ex )
-                    {
-                        ioerror = ex.Message;
-                    }
-                    catch ( System.UnauthorizedAccessException ex )
-                    {
-                        ioerror = ex.Message;
-                    }
-                    catch ( Exception ex )
-                    {
-                        ReportError(String.Format("{0}: unexpected exception occured ({1})", inpath, ex.Message));
-                        throw;
-                    }
-                    if ( ioerror.Length > 0 )
-                    {
-                        ReportError(String.Format("cannot open {0}: {1}", inpath, ioerror));
-                        hasError = true;
-                        continue;
-                    }
+            ArchiveInfo arcinfo = new();
+
+            if (options.Use32Mode) {
+                arcinfo.ArchiveSize = BinaryIO.ReadUInt32(header, 0x04);
+            }
+            else {
+                arcinfo.ArchiveSize = BinaryIO.ReadUInt64(header, 0x04);
+            }
+
+            if (options.Verbose) {
+                Console.Error.WriteLine(String.Format(new FileSizeFormatProvider(), "    Declared size: {0} ({0:fs})",
+                    arcinfo.ArchiveSize));
+            }
+
+            arcinfo.EntriesCount = BinaryIO.ReadUInt32(header, 0x0C);
+            if (options.Verbose) {
+                Console.Error.WriteLine(String.Format(new FileSizeFormatProvider(), "    Entries: {0}", arcinfo.EntriesCount));
+            }
+
+            if (arcinfo.EntriesCount <= 0) return true;
+
+            byte[] entriesinfobytes = reader.ReadBytes(Convert.ToInt32(TenoriEntrySize * arcinfo.EntriesCount));
+
+            UInt32 headerPartialSize = 0x10 + TenoriEntrySize * arcinfo.EntriesCount;
+
+            // -- Detect generic cabinets
+            // They are archives with several entries of the same name
+            // In this case, generate a name of the form orgfile.####.ext.
+
+            Dictionary<string, int> usedfilenames = new();
+            List<ArchiveEntryInfo> entriesinfo = new();
+
+            // TODO: should normally check if input is seekable beforehand
+            // When reading from a pipe, this wouldn't be possible
+
+            for (int i = 0; i < arcinfo.EntriesCount; ++i) {
+                ArchiveEntryInfo einfo = new();
+
+                if (options.Use32Mode) {
+                    einfo.EntryOffset = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x00));
+                }
+                else {
+                    einfo.EntryOffset = BinaryIO.ReadUInt64(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x00));
+                }
+
+                einfo.EntrySize = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x08));
+                einfo.EntryNameOffset = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x0C));
+                reader.BaseStream.Seek(einfo.EntryNameOffset, SeekOrigin.Begin);
+
+                UInt32 len = reader.ReadUInt32();
+                byte[] strbytes = reader.ReadBytes(Convert.ToInt32(len));
+                einfo.EntryName = Encoding.GetEncoding(932).GetString(strbytes);
+                if (usedfilenames.ContainsKey(einfo.EntryName)) {
+                    usedfilenames[einfo.EntryName]++;
+                }
+                else {
+                    usedfilenames.Add(einfo.EntryName, 1);
+                }
+
+                entriesinfo.Add(einfo);
+            }
+
+            if (options.Verbose) {
+                Console.Error.WriteLine(String.Format(new FileSizeFormatProvider(), "    Is padded with space: {0}",
+                    entriesinfo[0].EntryName.EndsWith(" ") ? "Yes" : "No"));
+            }
+
+            bool genericEntries = false;
+            string genericNameFormat = String.Empty;
+            for (int i = 0; i < arcinfo.EntriesCount; ++i) {
+                if (usedfilenames[entriesinfo[i].EntryName] > 1) {
+                    genericEntries = true;
+                    break;
                 }
             }
-            return !hasError;
+
+            if (genericEntries) {
+                genericNameFormat = "{0}.{1:d4}.{2}";
+                if (options.Verbose) {
+                    Console.Error.WriteLine($"    Format Mask: {genericNameFormat}");
+                }
+            }
+
+
+            for (int i = 0; i < arcinfo.EntriesCount; ++i) {
+                if (usedfilenames[entriesinfo[i].EntryName] > 1) {
+                    string fileName = Path.GetFileNameWithoutExtension(entriesinfo[i].EntryName);
+                    string fileExtension = Path.GetExtension(entriesinfo[i].EntryName).TrimStart('.');
+                    entriesinfo[i].EntryName = String.Format(genericNameFormat, fileName, i + 1, fileExtension);
+                }
+
+                arcinfo.Entries.Add(entriesinfo[i]);
+                if (options.Verbose) {
+                    Console.Error.WriteLine($" {i + 1,4} # {entriesinfo[i]}");
+                }
+
+                filenames.Add(entriesinfo[i].EntryName);
+                options.ExtractStub(options, baseSubdirectory, reader.BaseStream, entriesinfo[i]);
+            }
+
+            TextWriter writer;
+
+            if (options.ListPath != "-") {
+                if (options.ListPath.Length == 0) {
+                    writer = new StreamWriter(new MemoryStream()); // silently discard
+                }
+                else {
+                    writer = new StreamWriter(File.Create(options.ListPath), Encoding.UTF8);
+                }
+            }
+            else {
+                writer = Console.Out; // .Dispose() seems ok ?
+            }
+
+            using (writer) {
+                // Get current output (normally, stdout)
+                TextWriter originalWriter = Console.Out;
+                try {
+                    Console.SetOut(writer);
+                    writer.Write(String.Join(Environment.NewLine, filenames.ToArray()));
+                }
+                finally {
+                    Console.SetOut(originalWriter);
+                }
+            }
+
         }
 
-        private static bool ProcessIndividualExtract(Options options, string baseSubdirectory, string path, out string stringError)
-        {
-            stringError = "";
-            List<string> filenames = new List<string>();
+        return true;
+    }
 
-            // Only try catching when reading is not possible (not enough input/space)
-            using ( BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Encoding.Default) )
-            {
-                byte[] header = reader.ReadBytes(0x10);
-                UInt32 sig = BinaryIO.ReadUInt32(header, 0x00);
-                if ( TENORI_SIG_CONST != sig )
-                {
-                    stringError = String.Format("magic constant mismatch, found 0x{0:08X}", sig);
-                    return false;
-                }
+    static bool DummyExtractEntry(Options options, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo) {
+        return true;
+    }
 
-                ArchiveInfo arcinfo = new ArchiveInfo();
-
-                if ( options.Use32Mode )
-                {
-                    arcinfo.ArchiveSize = BinaryIO.ReadUInt32(header, 0x04);
-                }
-                else
-                {
-                    arcinfo.ArchiveSize = BinaryIO.ReadUInt64(header, 0x04);
-                }
-                if ( options.Verbose )
-                {
-                    Console.Error.WriteLine(String.Format(new FileSizeFormatProvider(), "    Declared size: {0} ({0:fs})", arcinfo.ArchiveSize));
-                }
-
-                arcinfo.EntriesCount = BinaryIO.ReadUInt32(header, 0x0C);
-                if ( options.Verbose )
-                {
-                    Console.Error.WriteLine(String.Format(new FileSizeFormatProvider(), "    Entries: {0}", arcinfo.EntriesCount));
-                }
-
-                if ( arcinfo.EntriesCount > 0 )
-                {
-                    byte[] entriesinfobytes = reader.ReadBytes(Convert.ToInt32(TENORI_ENTRY_SIZE * arcinfo.EntriesCount));
-
-                    UInt32 headerPartialSize = 0x10 + TENORI_ENTRY_SIZE * arcinfo.EntriesCount;
-
-                    // -- Detect generic cabinets
-                    // They are archives with several entries of the same name
-                    // In this case, generate a name of the form orgfile.####.ext.
-
-                    Dictionary<string, int> usedfilenames = new Dictionary<string,int>();
-                    List<ArchiveEntryInfo> entriesinfo = new List<ArchiveEntryInfo>();
-
-                    // TODO: should normally check if input is seekable beforehand
-                    // When reading from a pipe, this wouldn't be possible
-
-                    for ( int i = 0; i < arcinfo.EntriesCount; ++i )
-                    {
-                        ArchiveEntryInfo einfo = new ArchiveEntryInfo();
-
-                        if ( options.Use32Mode )
-                        {
-                            einfo.EntryOffset = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TENORI_ENTRY_SIZE + 0x00));
-                        }
-                        else
-                        {
-                            einfo.EntryOffset = BinaryIO.ReadUInt64(entriesinfobytes, Convert.ToInt32(i * TENORI_ENTRY_SIZE + 0x00));
-                        }
-                        einfo.EntrySize = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TENORI_ENTRY_SIZE + 0x08));
-                        einfo.EntryNameOffset = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TENORI_ENTRY_SIZE + 0x0C));
-                        reader.BaseStream.Seek(einfo.EntryNameOffset, SeekOrigin.Begin);
-
-                        UInt32 len = reader.ReadUInt32();
-                        byte[] strbytes = reader.ReadBytes(Convert.ToInt32(len));
-                        einfo.EntryName = Encoding.GetEncoding(932).GetString(strbytes);
-                        if (usedfilenames.ContainsKey(einfo.EntryName))
-                        {
-                            usedfilenames[einfo.EntryName]++;
-                        }
-                        else
-                        {
-                            usedfilenames.Add(einfo.EntryName, 1);
-                        }
-                        entriesinfo.Add(einfo);
-                    }
-
-                    if (options.Verbose)
-                    {
-                        Console.Error.WriteLine(String.Format(new FileSizeFormatProvider(), "    Is padded with space: {0}", entriesinfo[0].EntryName.EndsWith(" ") ? "Yes" : "No"));
-                    }
-
-                    bool genericEntries = false;
-                    string genericNameFormat = String.Empty;
-                    for ( int i = 0; i < arcinfo.EntriesCount; ++i )
-                    {
-                        if ( usedfilenames[entriesinfo[i].EntryName] > 1 )
-                        {
-                            genericEntries = true;
-                            break;
-                        }
-                    }
-                    if ( genericEntries )
-                    {
-                        genericNameFormat = "{0}.{1:d4}.{2}";
-                        if ( options.Verbose )
-                        {
-                            Console.Error.WriteLine(String.Format("    Format Mask: {0}", genericNameFormat));
-                        }
-                    }
-
-
-                    for ( int i = 0; i < arcinfo.EntriesCount; ++i )
-                    {
-                        if ( usedfilenames[entriesinfo[i].EntryName] > 1 )
-                        {
-                            string fileName = Path.GetFileNameWithoutExtension(entriesinfo[i].EntryName);
-                            string fileExtension = Path.GetExtension(entriesinfo[i].EntryName).TrimStart('.');
-                            entriesinfo[i].EntryName = String.Format(genericNameFormat, fileName, i + 1, fileExtension);
-                        }
-                        arcinfo.Entries.Add(entriesinfo[i]);
-                        if ( options.Verbose )
-                        {
-                            Console.Error.WriteLine(String.Format(" {0,4} # {1}", i + 1, entriesinfo[i].ToString()));
-                        }
-                        filenames.Add(entriesinfo[i].EntryName);
-                        options.ExtractStub(options, baseSubdirectory, reader.BaseStream, entriesinfo[i]);
-                    }
-                    TextWriter writer;
-
-                    if ( options.ListPath != "-" )
-                    {
-                        if ( options.ListPath.Length == 0 )
-                        {
-                            writer = new StreamWriter(new MemoryStream());  // silently discard
-                        }
-                        else
-                        {
-                            writer = new StreamWriter(File.Create(options.ListPath), Encoding.UTF8);
-                        }
-                    }
-                    else
-                    {
-                        writer = Console.Out;  // .Dispose() seems ok ?
-                    }
-
-                    using ( writer )
-                    {
-                        // Get current output (normally, stdout)
-                        TextWriter originalWriter = Console.Out;
-                        try
-                        {
-                            Console.SetOut(writer);
-                            writer.Write(String.Join(Environment.NewLine, filenames.ToArray()));
-                        }
-                        finally
-                        {
-                            Console.SetOut(originalWriter);
-                        }
-                    }
-
-                }
-
-            }
-
-            return true;
+    static bool ExtractEntry(Options options, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo) {
+        string target = Path.Combine(options.OutputDirectory, baseSubdirectory);
+        if (!Directory.Exists(target)) {
+            Directory.CreateDirectory(target);
         }
 
-        static bool DummyExtractEntry(Options options, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo)
-        {
-            return true;
+        target = Path.Combine(options.OutputDirectory, entryinfo.EntryName);
+
+        if (options.Verbose) {
+            Console.ForegroundColor = HighlightColor;
+            Console.Error.WriteLine("    ^ {0}", target);
+            Console.ResetColor();
         }
 
-        static bool ExtractEntry(Options options, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo)
-        {
-            string target = Path.Combine(options.OutputDirectory, baseSubdirectory);
-            if ( !Directory.Exists(target) )
-            {
-                Directory.CreateDirectory(target);
-            }
-            target = Path.Combine(options.OutputDirectory, entryinfo.EntryName);
-            
-            if ( options.Verbose )
-            {
-                Console.ForegroundColor = TenoriTool.HighlightColor;
-                Console.Error.WriteLine("    ^ {0}", target);
-                Console.ResetColor();
-            }
+        inputStream.Seek(Convert.ToInt64(entryinfo.EntryOffset), SeekOrigin.Begin);
+        Int32 remainingBytes = Convert.ToInt32(entryinfo.EntrySize);
+        const Int32 bufferSize = 4096;
+        byte[] readBuffer = new byte[4096];
 
-            inputStream.Seek(Convert.ToInt64(entryinfo.EntryOffset), SeekOrigin.Begin);
-            Int32 remainingBytes = Convert.ToInt32(entryinfo.EntrySize);
-            const Int32 BUFFER_SIZE = 4096;
-            byte[] readBuffer = new byte[4096];
-
-            using ( FileStream destinationStream = new FileStream(target, FileMode.Create, FileAccess.Write) )
-            {
-                while ( remainingBytes > 0 )
-                {
-                    int readSize = remainingBytes < BUFFER_SIZE ? remainingBytes : BUFFER_SIZE;
-                    inputStream.Read(readBuffer, 0, readSize);
-                    destinationStream.Write(readBuffer, 0, readSize);
-                    remainingBytes -= readSize;
-                }
+        using (FileStream destinationStream = new(target, FileMode.Create, FileAccess.Write)) {
+            while (remainingBytes > 0) {
+                int readSize = remainingBytes < bufferSize ? remainingBytes : bufferSize;
+                inputStream.Read(readBuffer, 0, readSize);
+                destinationStream.Write(readBuffer, 0, readSize);
+                remainingBytes -= readSize;
             }
-            
-            return true;
         }
 
-
+        return true;
     }
 }

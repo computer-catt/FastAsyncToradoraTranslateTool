@@ -76,7 +76,7 @@ namespace tenoritool
             #endregion
 
             public delegate bool ExtractDelegate(Options options, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo);
-            private ExtractDelegate _ExtractStub = new ExtractDelegate(DummyExtractEntry);
+            private ExtractDelegate _ExtractStub = new(DummyExtractEntry);
             public ExtractDelegate ExtractStub { get { return _ExtractStub; } set { _ExtractStub = value; } }
 
             // This attributed method is used for handling the help option
@@ -84,7 +84,7 @@ namespace tenoritool
                     HelpText = "Display help and exit.")]
             public string GetProgramHeader(bool useShortSummary)
             {
-                HelpText info = new HelpText(TenoriTool.Heading);
+                HelpText info = new(Heading);
                 info.Copyright = ThisAssembly.Copyright;
                 info.AddPreOptionsLine("This is free software. You may redistribute copies of it under the terms of");
                 info.AddPreOptionsLine("the MIT License <http://www.opensource.org/licenses/mit-license.php>.");
@@ -92,8 +92,8 @@ namespace tenoritool
                 info.AddPreOptionsLine("  - Includes Giacomo Stelluti Scala's Command Line Library, Version 1.5 (http://commandline.codeplex.com/).");
                 info.AddPreOptionsLine("  - Includes a code fragment from Banshee, Version 1.4.1 (http://banshee-project.org/)." +
                     Environment.NewLine);
-                info.AddPreOptionsLine(String.Format("Usage: {0} [OPTION]... [FILE]...", ThisAssembly.Name));
-                info.AddPreOptionsLine(String.Format("       {0} -x [OPTION]... [FILE]...", ThisAssembly.Name));
+                info.AddPreOptionsLine($"Usage: {ThisAssembly.Name} [OPTION]... [FILE]...");
+                info.AddPreOptionsLine($"       {ThisAssembly.Name} -x [OPTION]... [FILE]...");
 //!#                info.AddPreOptionsLine(String.Format("       {0} -a -l <list_path> [OPTION]... [FILE]...", ThisAssembly.Name) +
 //!#                    Environment.NewLine);
                 if ( useShortSummary == false )
@@ -119,7 +119,7 @@ namespace tenoritool
                             }
                             if ( Switch.Length > 0 )
                             {
-                                info.AddPreOptionsLine(String.Format("Type {0} {1} to obtain online help.", ThisAssembly.Name, Switch) +
+                                info.AddPreOptionsLine($"Type {ThisAssembly.Name} {Switch} to obtain online help." +
                                     Environment.NewLine);
                             }
                         }
@@ -134,13 +134,13 @@ namespace tenoritool
             public bool Validate()
             {
                 #region General validation
-                if ( this.UseExtractMode && this.UsePackMode )
+                if ( UseExtractMode && UsePackMode )
                 {
                     ReportError("cannot specify both extract and pack modes!");
                     return false;
                 }
 
-                if ( this.OutputDirectory.Length > 0 && IsInvalidPath(this.OutputDirectory) )
+                if ( OutputDirectory.Length > 0 && IsInvalidPath(OutputDirectory) )
                 {
                     ReportError("specified output directory is invalid");
                     return false;
@@ -148,19 +148,19 @@ namespace tenoritool
                 #endregion
 
                 #region Extract or "Listing" mode validation
-                if ( !this.UsePackMode )
+                if ( !UsePackMode )
                 {
-                    if ( this.ListPath.Length > 0 && this.ListPath != "-" && Directory.Exists(this.ListPath) )
+                    if ( ListPath.Length > 0 && ListPath != "-" && Directory.Exists(ListPath) )
                     {
                         ReportError("file list output path cannot be a directory");
                         return false;
                     }
-                    if ( this.Paths.Count < 1 )
+                    if ( Paths.Count < 1 )
                     {
                         ReportError("no file specified");
                         return false;
                     }
-                    if ( this.Paths.Contains("-") )
+                    if ( Paths.Contains("-") )
                     {
                         ReportError("STDIN input is not supported in this version");
                         return false;
@@ -214,7 +214,7 @@ namespace tenoritool
 
             private static bool IsInvalidPath(string path)
             {
-                Regex re = new Regex("^(:|[^a-z]:)|(:.*:)|..:|[" + Regex.Escape(String.Join("", Array.ConvertAll<char, String>(Path.GetInvalidPathChars(), Convert.ToString)) + "*?") + "]", RegexOptions.IgnoreCase);
+                Regex re = new("^(:|[^a-z]:)|(:.*:)|..:|[" + Regex.Escape(String.Join("", Array.ConvertAll<char, String>(Path.GetInvalidPathChars(), Convert.ToString)) + "*?") + "]", RegexOptions.IgnoreCase);
                 return re.IsMatch(path);
             }
             #endregion
@@ -223,7 +223,7 @@ namespace tenoritool
 
         private static void ReportError(string message)
         {
-            StringBuilder builder = new StringBuilder(message.Length * 2);
+            StringBuilder builder = new(message.Length * 2);
             builder.Append(ThisAssembly.Name);
             builder.Append(": ");
             builder.Append(message);

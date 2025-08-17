@@ -1,11 +1,11 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToradoraTranslateTool", "ToradoraTranslateTool\ToradoraTranslateTool.csproj", "{AE5D7ADD-9B69-4CA7-8060-A48CF665A821}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToradoraTranslateTool", "ToradoraTranslateTool\ToradoraTranslateTool.csproj", "{AE5D7ADD-9B69-4CA7-8060-A48CF665A821}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OBJEditor", "OBJEditor\OBJEditor.csproj", "{982F6A65-F0D6-4AAE-8C13-03C2F8A36ABC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OBJEditor", "OBJEditor\OBJEditor.csproj", "{982F6A65-F0D6-4AAE-8C13-03C2F8A36ABC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tenoritool", "tenoritool\tenoritool.csproj", "{2081BDDC-A099-4408-82BA-2436F5860A4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tenoritool", "tenoritool\tenoritool.csproj", "{2081BDDC-A099-4408-82BA-2436F5860A4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatWorker", "DatWorker\DatWorker.csproj", "{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatWorker", "DatWorker\DatWorker.csproj", "{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

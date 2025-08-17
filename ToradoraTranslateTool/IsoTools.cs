@@ -14,7 +14,7 @@ namespace ToradoraTranslateTool
             if (!Directory.Exists(Path.Combine(Application.StartupPath, "Data", "Iso")))
                 Directory.CreateDirectory(Path.Combine(Application.StartupPath, "Data", "Iso"));
             
-            SevenZipBase.SetLibraryPath(Path.Combine(Application.StartupPath, "Bin", RuntimeInformation.OSArchitecture == Architecture.X64 ? "7z X64.dll" : "7z X86.dll"));
+            SevenZipBase.SetLibraryPath(Path.Combine(Application.StartupPath/*, "Bin"*/, RuntimeInformation.OSArchitecture == Architecture.X64 ? "7z X64.dll" : "7z X86.dll"));
             SevenZipExtractor mySze = new(isoPath);
             if (progressCallback != null)
                 mySze.Extracting += (_, args) => { progressCallback.Invoke(args.PercentDone); };

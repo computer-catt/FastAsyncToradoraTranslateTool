@@ -62,7 +62,7 @@ namespace CommandLine
                         }
                     }
 
-                    if (!argumentEnumerator.IsLast && !ArgumentParser.IsInputValue(argumentEnumerator.Next))
+                    if (!argumentEnumerator.IsLast && !IsInputValue(argumentEnumerator.Next))
                     {
                         return ParserState.Failure;
                     }

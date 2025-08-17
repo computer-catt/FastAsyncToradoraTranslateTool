@@ -1,6 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ToradoraTranslateTool
@@ -8,16 +8,12 @@ namespace ToradoraTranslateTool
     class DatTools
     {
         const bool ProcessMethod = false;
-        public static void ExtractDat(string datPath) {
-            var a = new Stopwatch();
-            a.Start();
+        public static async Task ExtractDat(string datPath) {
             string newPath = Path.Combine(Application.StartupPath, @"Data\DatWorker\", Path.GetFileName(datPath));
             File.Copy(datPath, newPath, true);
 
             if (!ProcessMethod) {
-                DatWorker.Program.Process(Path.Combine(Application.StartupPath, @"Data\DatWorker\"), [newPath]);
-                a.Stop();
-                Console.WriteLine(a.ElapsedMilliseconds);
+                await new DatWorker.DatWorker(Path.Combine(Application.StartupPath, @"Data\DatWorker\")).Process([newPath]);
                 return;
             }
             
@@ -27,16 +23,13 @@ namespace ToradoraTranslateTool
             myProc.StartInfo.WorkingDirectory = Path.Combine(Application.StartupPath, @"Data\DatWorker\");
             myProc.Start();
 
-            myProc.WaitForExit();
-            
-            a.Stop();
-            Console.WriteLine(a.ElapsedMilliseconds);
+            await myProc.WaitForExitAsync();
         }
 
-        public static void RepackDat(string lstPath)
+        public static async Task RepackDat(string lstPath)
         {
             if (!ProcessMethod) {
-                DatWorker.Program.Process(Path.Combine(Application.StartupPath, @"Data\DatWorker\"), [lstPath]);
+                await new DatWorker.DatWorker(Path.Combine(Application.StartupPath, @"Data\DatWorker\")).Process([lstPath]);
                 return;
             }
             
@@ -46,7 +39,7 @@ namespace ToradoraTranslateTool
             myProc.StartInfo.WorkingDirectory = Path.Combine(Application.StartupPath, @"Data\DatWorker\");
             myProc.Start();
 
-            myProc.WaitForExit();
+            await myProc.WaitForExitAsync();
         }
     }
 }

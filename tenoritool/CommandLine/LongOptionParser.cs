@@ -41,7 +41,7 @@ namespace CommandLine
             option.IsDefined = true;
             if (!option.IsBoolean)
             {
-                if (parts.Length == 1 && (argumentEnumerator.IsLast || !ArgumentParser.IsInputValue(argumentEnumerator.Next)))
+                if (parts.Length == 1 && (argumentEnumerator.IsLast || !IsInputValue(argumentEnumerator.Next)))
                 {
                     return ParserState.Failure;
                 }
