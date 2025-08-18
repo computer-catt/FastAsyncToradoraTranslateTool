@@ -72,7 +72,7 @@ namespace tenoritool
 
 //!#            [Option("r", "recurse",
 //!#                   HelpText = "Perform task on extracted files, creating subdirectories. Ignored when packing.")]
-            public bool UseRecurseMode = false;
+            //public bool UseRecurseMode = false;
             #endregion
 
             public delegate bool ExtractDelegate(Options options, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo);

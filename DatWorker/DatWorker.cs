@@ -23,7 +23,7 @@ public class DatWorker(string workingDir) {
             }
             
             // unpack
-            //ResetWorkspace(workingDir);
+            ResetWorkspace(workingDir);
             await OpenDat(arg);
             lstOrder.Reverse();
             File.WriteAllLines(arg + "-LstOrder.lst", lstOrder.ToArray());
@@ -50,15 +50,14 @@ public class DatWorker(string workingDir) {
         try {
             Console.WriteLine("Extracting: {0}", Path.GetFileName(dat));
             string[] files = await ExtractDatContent(dat);
-
             List<Task> taskList = [];
-            
             foreach (string file in files) {
                 if (Path.GetExtension(file).ToLower().Trim(' ', '.') == "dat") {
-                    await OpenDat(file);
+                    taskList.Add(OpenDat(file));
                 }
             }
 
+            await Task.WhenAll(taskList);
             return true;
         }
         catch (Exception e) {
@@ -69,30 +68,22 @@ public class DatWorker(string workingDir) {
     }
 
     private async Task<string[]> ExtractDatContent(string dat) {
-
-        string tmpPath = Path.Combine(workingDir, @"Workspace\", Path.GetFileName(dat));
-        if (File.Exists(tmpPath))
-            File.Delete(tmpPath);
-
-        File.Move(dat, tmpPath);
-
-        string newDir = Path.Combine(workingDir, Path.GetDirectoryName(dat), Path.GetFileNameWithoutExtension(dat) + "\\");
+        string newDir = Path.Combine(workingDir, Path.GetDirectoryName(dat), Path.GetFileNameWithoutExtension(dat));
         if (newDir.StartsWith("\\"))
             newDir = "." + newDir;
 
-        string xpBat = Path.Combine(workingDir, "Workspace\\!xp.bat");
-        var startinfo = new ProcessStartInfo("cmd.exe", $"/C {xpBat}") {
+        string executable = Path.Combine(workingDir, "Workspace\\Tenoritool\\tenoritool.exe");
+        
+        List<string> flist = [];
+        string isPadded = "N";
+        Process process = new();
+        process.StartInfo = new(executable, $"-l \"\" -v -x -d \"{newDir}\" \"{dat}\"") {
             WorkingDirectory = workingDir,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-
-        List<string> flist = new();
-        string isPadded = "N";
-        var process = new Process();
-        process.StartInfo = startinfo;
         process.ErrorDataReceived += (_, args) => {
             if (args.Data == null)
                 return;
@@ -119,17 +110,9 @@ public class DatWorker(string workingDir) {
         process.Start();
         process.BeginErrorReadLine();
         await process.WaitForExitAsync();
-
-
-        File.Move(tmpPath, dat);
-
-        string directory = Path.Combine(workingDir, @"Workspace\", Path.GetFileNameWithoutExtension(dat));
-        bool directoryExist = Directory.Exists(directory);
+        
+        bool directoryExist = Directory.Exists(newDir);
         if (!directoryExist) return [];
-
-        if (Directory.Exists(newDir))
-            Directory.Delete(newDir, true);
-        Directory.Move(Path.Combine(workingDir, @"Workspace\", Path.GetFileNameWithoutExtension(dat)), newDir);
 
         string txt = isPadded;
         foreach (string file in flist.ToArray())
