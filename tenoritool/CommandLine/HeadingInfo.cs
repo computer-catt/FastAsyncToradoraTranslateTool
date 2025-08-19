@@ -26,114 +26,114 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine.Text
+using System;
+using System.IO;
+using System.Text;
+
+namespace CommandLine.Text;
+
+/// <summary>
+/// Models the heading informations part of an help text.
+/// You can assign it where you assign any <see cref="System.String"/> instance.
+/// </summary>
+public class HeadingInfo
 {
-    using System.IO;
-    using System.Text;
+    private readonly string programName;
+    private readonly string version;
 
     /// <summary>
-    /// Models the heading informations part of an help text.
-    /// You can assign it where you assign any <see cref="System.String"/> instance.
+    /// Initializes a new instance of the <see cref="CommandLine.Text.HeadingInfo"/> class
+    /// specifying program name.
     /// </summary>
-    public class HeadingInfo
+    /// <param name="programName">The name of the program.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="programName"/> is null or empty string.</exception>
+    public HeadingInfo(string programName)
+        : this(programName, null)
     {
-        private readonly string programName;
-        private readonly string version;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.Text.HeadingInfo"/> class
-        /// specifying program name.
-        /// </summary>
-        /// <param name="programName">The name of the program.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="programName"/> is null or empty string.</exception>
-        public HeadingInfo(string programName)
-            : this(programName, null)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLine.Text.HeadingInfo"/> class
+    /// specifying program name and version.
+    /// </summary>
+    /// <param name="programName">The name of the program.</param>
+    /// <param name="version">The version of the program.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="programName"/> is null or empty string.</exception>
+    public HeadingInfo(string programName, string version)
+    {
+        Validator.CheckIsNullOrEmpty(programName, "programName");
+
+        this.programName = programName;
+        this.version = version;
+    }
+
+    /// <summary>
+    /// Returns the heading informations as a <see cref="System.String"/>.
+    /// </summary>
+    /// <returns>The <see cref="System.String"/> that contains the heading informations.</returns>
+    public override string ToString()
+    {
+        bool isVersionNull = string.IsNullOrEmpty(version);
+        StringBuilder builder = new(programName.Length +
+                                    (!isVersionNull ? version.Length + 1: 0));
+        builder.Append(programName);
+        if (!isVersionNull)
         {
+            builder.Append(' ');
+            builder.Append(version);
         }
+        return builder.ToString();
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.Text.HeadingInfo"/> class
-        /// specifying program name and version.
-        /// </summary>
-        /// <param name="programName">The name of the program.</param>
-        /// <param name="version">The version of the program.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="programName"/> is null or empty string.</exception>
-        public HeadingInfo(string programName, string version)
-        {
-            Validator.CheckIsNullOrEmpty(programName, "programName");
+    /// <summary>
+    /// Converts the heading informations to a <see cref="System.String"/>.
+    /// </summary>
+    /// <param name="info">This <see cref="CommandLine.Text.HeadingInfo"/> instance.</param>
+    /// <returns>The <see cref="System.String"/> that contains the heading informations.</returns>
+    public static implicit operator string(HeadingInfo info)
+    {
+        return info.ToString();
+    }
 
-            this.programName = programName;
-            this.version = version;
-        }
+    /// <summary>
+    /// Writes out a string and a new line using the program name specified in the constructor
+    /// and <paramref name="message"/> parameter.
+    /// </summary>
+    /// <param name="message">The <see cref="System.String"/> message to write.</param>
+    /// <param name="writer">The target <see cref="System.IO.TextWriter"/> derived type.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="message"/> is null or empty string.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="writer"/> is null.</exception>
+    public void WriteMessage(string message, TextWriter writer)
+    {
+        Validator.CheckIsNullOrEmpty(message, "message");
+        Validator.CheckIsNull(writer, "writer");
 
-        /// <summary>
-        /// Returns the heading informations as a <see cref="System.String"/>.
-        /// </summary>
-        /// <returns>The <see cref="System.String"/> that contains the heading informations.</returns>
-        public override string ToString()
-        {
-            bool isVersionNull = string.IsNullOrEmpty(version);
-            StringBuilder builder = new(programName.Length +
-                                (!isVersionNull ? version.Length + 1: 0));
-            builder.Append(programName);
-            if (!isVersionNull)
-            {
-                builder.Append(' ');
-                builder.Append(version);
-            }
-            return builder.ToString();
-        }
+        StringBuilder builder = new(programName.Length + message.Length + 2);
+        builder.Append(programName);
+        builder.Append(": ");
+        builder.Append(message);
+        writer.WriteLine(builder.ToString());
+    }
 
-        /// <summary>
-        /// Converts the heading informations to a <see cref="System.String"/>.
-        /// </summary>
-        /// <param name="info">This <see cref="CommandLine.Text.HeadingInfo"/> instance.</param>
-        /// <returns>The <see cref="System.String"/> that contains the heading informations.</returns>
-        public static implicit operator string(HeadingInfo info)
-        {
-            return info.ToString();
-        }
+    /// <summary>
+    /// Writes out a string and a new line using the program name specified in the constructor
+    /// and <paramref name="message"/> parameter to standard output stream.
+    /// </summary>
+    /// <param name="message">The <see cref="System.String"/> message to write.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="message"/> is null or empty string.</exception>
+    public void WriteMessage(string message)
+    {
+        WriteMessage(message, Console.Out);
+    }
 
-        /// <summary>
-        /// Writes out a string and a new line using the program name specified in the constructor
-        /// and <paramref name="message"/> parameter.
-        /// </summary>
-        /// <param name="message">The <see cref="System.String"/> message to write.</param>
-        /// <param name="writer">The target <see cref="System.IO.TextWriter"/> derived type.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="message"/> is null or empty string.</exception>
-        /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="writer"/> is null.</exception>
-        public void WriteMessage(string message, TextWriter writer)
-        {
-            Validator.CheckIsNullOrEmpty(message, "message");
-            Validator.CheckIsNull(writer, "writer");
-
-            StringBuilder builder = new(programName.Length + message.Length + 2);
-            builder.Append(programName);
-            builder.Append(": ");
-            builder.Append(message);
-            writer.WriteLine(builder.ToString());
-        }
-
-        /// <summary>
-        /// Writes out a string and a new line using the program name specified in the constructor
-        /// and <paramref name="message"/> parameter to standard output stream.
-        /// </summary>
-        /// <param name="message">The <see cref="System.String"/> message to write.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="message"/> is null or empty string.</exception>
-        public void WriteMessage(string message)
-        {
-            WriteMessage(message, System.Console.Out);
-        }
-
-        /// <summary>
-        /// Writes out a string and a new line using the program name specified in the constructor
-        /// and <paramref name="message"/> parameter to standard error stream.
-        /// </summary>
-        /// <param name="message">The <see cref="System.String"/> message to write.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="message"/> is null or empty string.</exception>
-        public void WriteError(string message)
-        {
-            WriteMessage(message, System.Console.Error);
-        }
+    /// <summary>
+    /// Writes out a string and a new line using the program name specified in the constructor
+    /// and <paramref name="message"/> parameter to standard error stream.
+    /// </summary>
+    /// <param name="message">The <see cref="System.String"/> message to write.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="message"/> is null or empty string.</exception>
+    public void WriteError(string message)
+    {
+        WriteMessage(message, Console.Error);
     }
 }

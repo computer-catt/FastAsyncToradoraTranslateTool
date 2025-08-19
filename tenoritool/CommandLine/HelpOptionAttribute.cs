@@ -26,67 +26,64 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+using System.Reflection;
+
+namespace CommandLine;
+
+/// <summary>
+/// Indicates the instance method that must be invoked when it becomes necessary show your help screen.
+/// The method signature is an instance method with no parameters and <see cref="System.String"/>
+/// return value.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class HelpOptionAttribute : BaseOptionAttribute
 {
-    using System;
-    using System.Reflection;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLine.HelpOptionAttribute"/> class.
+    /// </summary>
+    public HelpOptionAttribute()
+        : this(null, "help")
+    {
+    }
 
     /// <summary>
-    /// Indicates the instance method that must be invoked when it becomes necessary show your help screen.
-    /// The method signature is an instance method with no parameters and <see cref="System.String"/>
-    /// return value.
+    /// Initializes a new instance of the <see cref="CommandLine.HelpOptionAttribute"/> class.
+    /// Allows you to define short and long option names.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method,
-            AllowMultiple=false,
-            Inherited=true)]
-    public sealed class HelpOptionAttribute : BaseOptionAttribute
+    /// <param name="shortName">The short name of the option or null if not used.</param>
+    /// <param name="longName">The long name of the option or null if not used.</param>
+    public HelpOptionAttribute(string shortName, string longName)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.HelpOptionAttribute"/> class.
-        /// </summary>
-        public HelpOptionAttribute()
-            : this(null, "help")
-        {
-        }
+        ShortName = shortName;
+        LongName = longName;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.HelpOptionAttribute"/> class.
-        /// Allows you to define short and long option names.
-        /// </summary>
-        /// <param name="shortName">The short name of the option or null if not used.</param>
-        /// <param name="longName">The long name of the option or null if not used.</param>
-        public HelpOptionAttribute(string shortName, string longName)
-        {
-            ShortName = shortName;
-            LongName = longName;
-        }
+    /// <summary>
+    /// Returns always false for this kind of option.
+    /// This behaviour can't be changed by design; if you try set <see cref="CommandLine.HelpOptionAttribute.Required"/>
+    /// an <see cref="System.InvalidOperationException"/> will be thrown.
+    /// </summary>
+    public override bool Required
+    {
+        get { return false; }
+        set { throw new InvalidOperationException(); }
+    }
 
-        /// <summary>
-        /// Returns always false for this kind of option.
-        /// This behaviour can't be changed by design; if you try set <see cref="CommandLine.HelpOptionAttribute.Required"/>
-        /// an <see cref="System.InvalidOperationException"/> will be thrown.
-        /// </summary>
-        public override bool Required
-        {
-            get { return false; }
-            set { throw new InvalidOperationException(); }
-        }
+    internal static void InvokeMethod(object target,
+        Pair<MethodInfo, HelpOptionAttribute> pair, bool useShortSummary, out string text)
+    {
+        text = null;
 
-        internal static void InvokeMethod(object target,
-                Pair<MethodInfo, HelpOptionAttribute> pair, bool useShortSummary, out string text)
-        {
-            text = null;
+        MethodInfo method = pair.Left;
+        if (!CheckMethodSignature(method))
+            throw new MemberAccessException();
 
-            MethodInfo method = pair.Left;
-            if (!CheckMethodSignature(method))
-                throw new MemberAccessException();
+        text = (string)method.Invoke(target, new object[] { useShortSummary });
+    }
 
-            text = (string)method.Invoke(target, new object[] { useShortSummary });
-        }
-
-        private static bool CheckMethodSignature(MethodInfo value)
-        {
-            return value.ReturnType == typeof(string) && value.GetParameters().Length == 1;
-        }
+    private static bool CheckMethodSignature(MethodInfo value)
+    {
+        return value.ReturnType == typeof(string) && value.GetParameters().Length == 1;
     }
 }

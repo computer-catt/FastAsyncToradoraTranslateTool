@@ -26,55 +26,45 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+namespace CommandLine;
+
+sealed class LongOptionParser : ArgumentParser
 {
-    sealed class LongOptionParser : ArgumentParser
+    public override ParserState Parse(IStringEnumerator argumentEnumerator, IOptionMap map, object options)
     {
-        public sealed override ParserState Parse(IStringEnumerator argumentEnumerator, IOptionMap map, object options)
+        string[] parts = argumentEnumerator.Current.Substring(2).Split(new[] { '=' }, 2);
+        OptionInfo option = map[parts[0]];
+        if (option == null)
         {
-            string[] parts = argumentEnumerator.Current.Substring(2).Split(new char[] { '=' }, 2);
-            OptionInfo option = map[parts[0]];
-            if (option == null)
+            return ParserState.Failure;
+        }
+        option.IsDefined = true;
+        if (!option.IsBoolean)
+        {
+            if (parts.Length == 1 && (argumentEnumerator.IsLast || !IsInputValue(argumentEnumerator.Next)))
             {
                 return ParserState.Failure;
             }
-            option.IsDefined = true;
-            if (!option.IsBoolean)
-            {
-                if (parts.Length == 1 && (argumentEnumerator.IsLast || !IsInputValue(argumentEnumerator.Next)))
-                {
-                    return ParserState.Failure;
-                }
-                if (parts.Length == 2)
-                {
-                    if (option.SetValue(parts[1], options))
-                        return ParserState.Success;
-                    else
-                        return ParserState.Failure;
-                }
-                else
-                {
-                    if (option.SetValue(argumentEnumerator.Next, options))
-                        return ParserState.Success | ParserState.MoveOnNextElement;
-                    else
-                        return ParserState.Failure;
-                }
-            }
-            else
-            {
-                if (parts.Length == 2)
-                {
-                    return ParserState.Failure;
-                }
-                if (option.SetValue(true, options))
-                {
+            if (parts.Length == 2) {
+                if (option.SetValue(parts[1], options))
                     return ParserState.Success;
-                }
-                else
-                {
-                    return ParserState.Failure;
-                }
+                return ParserState.Failure;
             }
+
+            if (option.SetValue(argumentEnumerator.Next, options))
+                return ParserState.Success | ParserState.MoveOnNextElement;
+            return ParserState.Failure;
         }
+
+        if (parts.Length == 2)
+        {
+            return ParserState.Failure;
+        }
+        if (option.SetValue(true, options))
+        {
+            return ParserState.Success;
+        }
+
+        return ParserState.Failure;
     }
 }

@@ -26,35 +26,32 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+using System.Runtime.Serialization;
+
+namespace CommandLine;
+
+/// <summary>
+/// This exception is thrown when a generic parsing error occurs.
+/// </summary>
+[Serializable]
+public sealed class ParserException : Exception, ISerializable
 {
-    using System;
-    using System.Runtime.Serialization;
+    internal ParserException() {
+    }
 
-    /// <summary>
-    /// This exception is thrown when a generic parsing error occurs.
-    /// </summary>
-    [Serializable]
-    public sealed class ParserException : Exception, ISerializable
+    internal ParserException(string message)
+        : base(message)
     {
-        internal ParserException()
-            : base()
-        {
-        }
+    }
 
-        internal ParserException(string message)
-            : base(message)
-        {
-        }
+    internal ParserException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 
-        internal ParserException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-
-        internal ParserException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+    internal ParserException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
     }
 }

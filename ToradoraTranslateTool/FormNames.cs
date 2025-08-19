@@ -49,7 +49,7 @@ namespace ToradoraTranslateTool
             }
             else
             {
-                JObject translatedNames = new JObject(); // Creating json with all strings
+                JObject translatedNames = new(); // Creating json with all strings
                 for (int i = 0; i < dataGridViewNames.Rows.Count; i++)
                 {
                     string originalName = dataGridViewNames.Rows[i].Cells[0].Value?.ToString();

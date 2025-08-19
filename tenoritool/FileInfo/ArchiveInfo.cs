@@ -26,53 +26,46 @@
 // THE SOFTWARE.
 #endregion
 
-namespace tenoritool
+using System.Collections.Generic;
+
+namespace tenoriTool;
+
+public class ArchiveInfo
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
+    private ulong _ArchiveSize;
+    private uint _EntriesCount;
+    private List<ArchiveEntryInfo> _Entries;
 
-    class ArchiveInfo
+
+    public ulong ArchiveSize { get { return _ArchiveSize; } set { _ArchiveSize = value; } }
+    public uint EntriesCount { get { return _EntriesCount; } set { _EntriesCount = value; } }
+    public List<ArchiveEntryInfo> Entries { get { return _Entries; } set { _Entries = value; } }
+
+    public ArchiveInfo()
     {
-        protected UInt64 _ArchiveSize;
-        protected UInt32 _EntriesCount;
-        protected List<ArchiveEntryInfo> _Entries;
-
-
-        public UInt64 ArchiveSize { get { return _ArchiveSize; } set { _ArchiveSize = value; } }
-        public UInt32 EntriesCount { get { return _EntriesCount; } set { _EntriesCount = value; } }
-        public List<ArchiveEntryInfo> Entries { get { return _Entries; } set { _Entries = value; } }
-
-        public ArchiveInfo()
-        {
-            _Entries = new List<ArchiveEntryInfo>();
-        }
+        _Entries = new List<ArchiveEntryInfo>();
     }
+}
 
-    class ArchiveEntryInfo
+public class ArchiveEntryInfo
+{
+    string _EntryName;
+    ulong _EntryOffset;
+    uint _EntrySize;
+    uint _EntryNameOffset;
+
+    public string EntryName { get { return _EntryName; } set { _EntryName = value; } }
+    public ulong EntryOffset { get { return _EntryOffset; } set { _EntryOffset = value; } }
+    public uint EntrySize { get { return _EntrySize; } set { _EntrySize = value; } }
+    public uint EntryNameOffset { get { return _EntryNameOffset; } set { _EntryNameOffset = value; } }
+    //
+    // Summary:
+    //     Returns a System.String that contains entry info.
+    //
+    // Returns:
+    //     A System.String that contains entry info.
+    public override string ToString()
     {
-        string _EntryName;
-        UInt64 _EntryOffset;
-        UInt32 _EntrySize;
-        UInt32 _EntryNameOffset;
-
-        public string EntryName { get { return _EntryName; } set { _EntryName = value; } }
-        public UInt64 EntryOffset { get { return _EntryOffset; } set { _EntryOffset = value; } }
-        public UInt32 EntrySize { get { return _EntrySize; } set { _EntrySize = value; } }
-        public UInt32 EntryNameOffset { get { return _EntryNameOffset; } set { _EntryNameOffset = value; } }
-        //
-        // Summary:
-        //     Returns a System.String that contains entry info.
-        //
-        // Returns:
-        //     A System.String that contains entry info.
-        public override string ToString()
-        {
-            return String.Join(",", new string[] {
-                EntryName,
-                "@" + EntryOffset.ToString("X8"),
-                String.Format(new FileSizeFormatProvider(), "0x{0:X8} ({0:fs})", EntrySize)
-            });
-        }
+        return string.Join(",", EntryName, "@" + EntryOffset.ToString("X8"), string.Format(new FileSizeFormatProvider(), "0x{0:X8} ({0:fs})", EntrySize));
     }
 }

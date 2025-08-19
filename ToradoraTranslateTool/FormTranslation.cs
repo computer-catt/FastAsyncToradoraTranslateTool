@@ -37,7 +37,7 @@ namespace ToradoraTranslateTool
                 if (!File.Exists(mainFilePath))
                     File.WriteAllText(mainFilePath, "{ }");
 
-                List<String> directories = new List<string>();
+                List<String> directories = new();
                 directories.AddRange(Directory.GetDirectories(Path.Combine(Application.StartupPath, "Data", "Txt")).Select(Path.GetFileName)); // Get all directories with .obj and .txt files
                 directories.AddRange(Directory.GetDirectories(Path.Combine(Application.StartupPath, "Data", "Obj")).Select(Path.GetFileName));
 
@@ -89,11 +89,11 @@ namespace ToradoraTranslateTool
 
             currentFile = filename;
             string[] myStrings;
-            Dictionary<int, string> myNames = new Dictionary<int, string>();
+            Dictionary<int, string> myNames = new();
             if (Path.GetExtension(currentFile) == ".obj")
             {
                 string filepath = Path.Combine(Application.StartupPath, "Data", "Obj", currentFile, currentFile);
-                OBJHelper myHelper = new OBJHelper(File.ReadAllBytes(filepath));
+                OBJHelper myHelper = new(File.ReadAllBytes(filepath));
                 myStrings = myHelper.Import();
                 myNames = myHelper.actors;
             }
@@ -161,7 +161,7 @@ namespace ToradoraTranslateTool
             }
             else
             {
-                JObject translatedStrings = new JObject(); // Creating json with all strings
+                JObject translatedStrings = new(); // Creating json with all strings
                 for (int i = 0; i < dataGridViewStrings.Rows.Count; i++)
                 {
                     string translatedString = dataGridViewStrings.Rows[i].Cells[2].Value?.ToString();
@@ -218,7 +218,7 @@ namespace ToradoraTranslateTool
         #region Text export
         private void ExportText(string filename)
         {
-            Workbook workbook = new Workbook(filename, "Sheet1");
+            Workbook workbook = new(filename, "Sheet1");
             for (int i = 0; i < dataGridViewStrings.RowCount; i++)
             {
                 workbook.CurrentWorksheet.AddNextCell(dataGridViewStrings.Rows[i].Cells[0].Value?.ToString());
@@ -239,7 +239,7 @@ namespace ToradoraTranslateTool
                     return;
                 }
 
-                using (SaveFileDialog mySaveFileDialog = new SaveFileDialog())
+                using (SaveFileDialog mySaveFileDialog = new())
                 {
                     mySaveFileDialog.Filter = "Excel sheet (*.xlsx) | *.xlsx";
                     mySaveFileDialog.FileName = Path.GetFileNameWithoutExtension(currentFile);
@@ -324,12 +324,12 @@ namespace ToradoraTranslateTool
                     return;
                 }
 
-                using (OpenFileDialog myOpenFileDialog = new OpenFileDialog())
+                using (OpenFileDialog myOpenFileDialog = new())
                 {
                     myOpenFileDialog.Filter = "Xlsx table (*.xlsx) | *.xlsx";
                     if (myOpenFileDialog.ShowDialog() == DialogResult.OK)
                     {
-                        FormImport myForm = new FormImport();
+                        FormImport myForm = new();
                         if (myForm.ShowDialog() == DialogResult.OK)
                             ImportText(myOpenFileDialog.FileName, myForm.Column, myForm.Cell);
                     }
@@ -349,7 +349,7 @@ namespace ToradoraTranslateTool
                 {
                     if (myFolderDialog.ShowDialog() == DialogResult.OK)
                     {
-                        FormImport myForm = new FormImport();
+                        FormImport myForm = new();
                         if (myForm.ShowDialog() == DialogResult.OK)
                         {
                             for (int i = 1; i < dataGridViewFiles.RowCount; i++)
@@ -394,7 +394,7 @@ namespace ToradoraTranslateTool
 
         private List<string> GetAllNames()
         {
-            List<string> uniqueNames = new List<string>();
+            List<string> uniqueNames = new();
 
             for (int i = 1; i < dataGridViewFiles.Rows.Count; i++)
             {
@@ -403,8 +403,8 @@ namespace ToradoraTranslateTool
                     continue;
 
                 string filepath = Path.Combine(Application.StartupPath, "Data", "Obj", filename, filename);
-                OBJHelper myHelper = new OBJHelper(File.ReadAllBytes(filepath));
-                Dictionary<int, string> myNames = new Dictionary<int, string>();
+                OBJHelper myHelper = new(File.ReadAllBytes(filepath));
+                Dictionary<int, string> myNames = new();
                 myHelper.Import();
                 myNames = myHelper.actors;
 
@@ -421,7 +421,7 @@ namespace ToradoraTranslateTool
 
         private void itemTranslateNames_Click(object sender, EventArgs e)
         {
-            FormNames myForm = new FormNames(GetAllNames());
+            FormNames myForm = new(GetAllNames());
             myForm.Show();
         }
 
@@ -441,7 +441,7 @@ namespace ToradoraTranslateTool
 
         private string SelectDumpedFontFile()
         {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            using (OpenFileDialog openFileDialog = new())
             {
                 openFileDialog.Filter = "Dumped font file (*.txt) | *.txt";
 
@@ -463,7 +463,7 @@ namespace ToradoraTranslateTool
                 }
 
                 string dumpedFontFile = SelectDumpedFontFile();
-                LineBreaksInserter inserter = new LineBreaksInserter(dumpedFontFile, 455);
+                LineBreaksInserter inserter = new(dumpedFontFile, 455);
 
                 InsertLineBreaks(inserter);
             }
@@ -478,7 +478,7 @@ namespace ToradoraTranslateTool
             try
             {
                 string dumpedFontFile = SelectDumpedFontFile();
-                LineBreaksInserter inserter = new LineBreaksInserter(dumpedFontFile, 455);
+                LineBreaksInserter inserter = new(dumpedFontFile, 455);
 
                 for (int i = 1; i < dataGridViewFiles.RowCount; i++)
                 {

@@ -26,39 +26,36 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+using System.Runtime.Serialization;
+
+namespace CommandLine;
+
+/// <summary>
+/// Represents the exception that is thrown when an attempt to assign incopatible types.
+/// This exception has only backward compatibility purpose, instead catch
+/// <see cref="CommandLine.ParserException"/>.
+/// The code will no more throw this type.
+/// </summary>
+[Obsolete]
+[Serializable]
+public sealed class IncompatibleTypesException : Exception, ISerializable
 {
-    using System;
-    using System.Runtime.Serialization;
+    internal IncompatibleTypesException() {
+    }
 
-    /// <summary>
-    /// Represents the exception that is thrown when an attempt to assign incopatible types.
-    /// This exception has only backward compatibility purpose, instead catch
-    /// <see cref="CommandLine.ParserException"/>.
-    /// The code will no more throw this type.
-    /// </summary>
-    [Obsolete]
-    [Serializable]
-    public sealed class IncompatibleTypesException : Exception, ISerializable
+    internal IncompatibleTypesException(string message)
+        : base(message)
     {
-        internal IncompatibleTypesException()
-            : base()
-        {
-        }
+    }
 
-        internal IncompatibleTypesException(string message)
-            : base(message)
-        {
-        }
+    internal IncompatibleTypesException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 
-        internal IncompatibleTypesException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-
-        internal IncompatibleTypesException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+    internal IncompatibleTypesException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
     }
 }

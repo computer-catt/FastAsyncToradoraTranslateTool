@@ -26,147 +26,146 @@
 // THE SOFTWARE.
 #endregion
 
-namespace tenoritool
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+using CommandLine;
+using CommandLine.Text;
+using static tenoriTool.TenoriToolApi;
+
+namespace tenoriTool;
+
+internal static partial class TenoriTool
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.IO;
-    using System.Text;
-    using System.Text.RegularExpressions;
-
-    using CommandLine;
-    using CommandLine.Text;
-
-    static partial class TenoriTool
+    sealed class Options
     {
-        sealed class Options
-        {
-            [ValueList(typeof(List<string>))]
-            public IList<string> Paths = null;
+        [ValueList(typeof(List<string>))]
+        public IList<string> Paths = null;
 
-            #region command-line options
-            [Option("v", "verbose",
-                    HelpText = "Explain what is being done.")]
-            public bool Verbose = false;
+        #region command-line options
+        [Option("v", "verbose",
+            HelpText = "Explain what is being done.")]
+        public bool Verbose = false;
 
-            [Option("x", null,
-                    HelpText = "Extract files from archive. See -a option.")]
-            public bool UseExtractMode = false;
+        [Option("x", null,
+            HelpText = "Extract files from archive. See -a option.")]
+        public bool UseExtractMode = false;
 
 //!#            [Option("a", null,
 //!#                    HelpText = "Add files to archive. Requires -l or --list argument to be specified.")]
-            public bool UsePackMode = false;
+        //public bool UsePackMode = false;
 
-            [Option("d", "output-directory",
-                    HelpText = "Specify output directory (otherwise same as input parameter).")]
-            public string OutputDirectory = String.Empty;
+        [Option("d", "output-directory",
+            HelpText = "Specify output directory (otherwise same as input parameter).")]
+        public string OutputDirectory = string.Empty;
 
-            [Option("l", "list",
-                 HelpText = "Specify path for list of archive contents. If this option is omitted when extracting, list is echoed on standard output. If this option is a blank string when extracting, list is silently discarded. If this option is omitted when packing, list is read on standard input.")]
-            public string ListPath = "-";
+        [Option("l", "list",
+            HelpText = "Specify path for list of archive contents. If this option is omitted when extracting, list is echoed on standard output. If this option is a blank string when extracting, list is silently discarded. If this option is omitted when packing, list is read on standard input.")]
+        public string ListPath = "-";
 
-            [Option("4", "32bit-mode",
-                    HelpText = "Interpret file offsets as 32-bit integers instead of 64-bit. Ignored when packing.")]
-            public bool Use32Mode = false;
+        [Option("4", "32bit-mode",
+            HelpText = "Interpret file offsets as 32-bit integers instead of 64-bit. Ignored when packing.")]
+        public bool Use32Mode = false;
 
 //!#            [Option("r", "recurse",
 //!#                   HelpText = "Perform task on extracted files, creating subdirectories. Ignored when packing.")]
-            //public bool UseRecurseMode = false;
-            #endregion
+        //public bool UseRecurseMode = false;
+        #endregion
 
-            public delegate bool ExtractDelegate(Options options, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo);
-            private ExtractDelegate _ExtractStub = new(DummyExtractEntry);
-            public ExtractDelegate ExtractStub { get { return _ExtractStub; } set { _ExtractStub = value; } }
+        private ExtractDelegate _ExtractStub = DummyExtractEntry;
+        public ExtractDelegate ExtractStub { get { return _ExtractStub; } set { _ExtractStub = value; } }
 
-            // This attributed method is used for handling the help option
-            [HelpOption("?", "help",
-                    HelpText = "Display help and exit.")]
-            public string GetProgramHeader(bool useShortSummary)
-            {
-                HelpText info = new(Heading);
-                info.Copyright = ThisAssembly.Copyright;
-                info.AddPreOptionsLine("This is free software. You may redistribute copies of it under the terms of");
-                info.AddPreOptionsLine("the MIT License <http://www.opensource.org/licenses/mit-license.php>.");
-                info.AddPreOptionsLine("  - Based on Giacomo Stelluti Scala's cptree program, Version 1.1 (http://cptree.codeplex.com/).");
-                info.AddPreOptionsLine("  - Includes Giacomo Stelluti Scala's Command Line Library, Version 1.5 (http://commandline.codeplex.com/).");
-                info.AddPreOptionsLine("  - Includes a code fragment from Banshee, Version 1.4.1 (http://banshee-project.org/)." +
-                    Environment.NewLine);
-                info.AddPreOptionsLine($"Usage: {ThisAssembly.Name} [OPTION]... [FILE]...");
-                info.AddPreOptionsLine($"       {ThisAssembly.Name} -x [OPTION]... [FILE]...");
+        // This attributed method is used for handling the help option
+        [HelpOption("?", "help",
+            HelpText = "Display help and exit.")]
+        public string GetProgramHeader(bool useShortSummary)
+        {
+            HelpText info = new(Heading);
+            info.Copyright = ThisAssembly.Copyright;
+            info.AddPreOptionsLine("This is free software. You may redistribute copies of it under the terms of");
+            info.AddPreOptionsLine("the MIT License <http://www.opensource.org/licenses/mit-license.php>.");
+            info.AddPreOptionsLine("  - Based on Giacomo Stelluti Scala's cptree program, Version 1.1 (http://cptree.codeplex.com/).");
+            info.AddPreOptionsLine("  - Includes Giacomo Stelluti Scala's Command Line Library, Version 1.5 (http://commandline.codeplex.com/).");
+            info.AddPreOptionsLine("  - Includes a code fragment from Banshee, Version 1.4.1 (http://banshee-project.org/)." +
+                                   Environment.NewLine);
+            info.AddPreOptionsLine($"Usage: {ThisAssembly.Name} [OPTION]... [FILE]...");
+            info.AddPreOptionsLine($"       {ThisAssembly.Name} -x [OPTION]... [FILE]...");
 //!#                info.AddPreOptionsLine(String.Format("       {0} -a -l <list_path> [OPTION]... [FILE]...", ThisAssembly.Name) +
 //!#                    Environment.NewLine);
-                if ( useShortSummary == false )
+            if ( useShortSummary == false )
+            {
+                info.AddOptions(this);
+            }
+            else
+            {
+                MethodInfo methodInfo = typeof(Options).GetMethod("GetProgramHeader");
+                foreach ( Attribute attr in methodInfo.GetCustomAttributes(true) )
                 {
-                    info.AddOptions(this);
-                }
-                else
-                {
-                    System.Reflection.MethodInfo methodInfo = typeof(Options).GetMethod("GetProgramHeader");
-                    foreach ( Attribute attr in methodInfo.GetCustomAttributes(true) )
+                    HelpOptionAttribute HelpAttr = attr as HelpOptionAttribute;
+                    if (null != HelpAttr)
                     {
-                        HelpOptionAttribute HelpAttr = attr as HelpOptionAttribute;
-                        if (null != HelpAttr)
+                        string Switch = string.Empty;
+                        if ( HelpAttr.HasLongName )
                         {
-                            string Switch = String.Empty;
-                            if ( HelpAttr.HasLongName )
-                            {
-                                Switch = "--" + HelpAttr.LongName;
-                            }
-                            if ( HelpAttr.HasShortName )
-                            {
-                                Switch = "-" + HelpAttr.ShortName;
-                            }
-                            if ( Switch.Length > 0 )
-                            {
-                                info.AddPreOptionsLine($"Type {ThisAssembly.Name} {Switch} to obtain online help." +
-                                    Environment.NewLine);
-                            }
+                            Switch = "--" + HelpAttr.LongName;
+                        }
+                        if ( HelpAttr.HasShortName )
+                        {
+                            Switch = "-" + HelpAttr.ShortName;
+                        }
+                        if ( Switch.Length > 0 )
+                        {
+                            info.AddPreOptionsLine($"Type {ThisAssembly.Name} {Switch} to obtain online help." +
+                                                   Environment.NewLine);
                         }
                     }
                 }
-                return info.ToString();
             }
+            return info.ToString();
+        }
 
 
 
-            #region Extra validation stuff
-            public bool Validate()
+        #region Extra validation stuff
+        public bool Validate()
+        {
+            #region General validation
+            /*if ( UseExtractMode && UsePackMode )
             {
-                #region General validation
-                if ( UseExtractMode && UsePackMode )
+                ReportError("cannot specify both extract and pack modes!");
+                return false;
+            }*/
+
+            if ( OutputDirectory.Length > 0 && IsInvalidPath(OutputDirectory) )
+            {
+                ReportError("specified output directory is invalid");
+                return false;
+            }
+            #endregion
+
+            #region Extract or "Listing" mode validation
+            if ( UseExtractMode )
+            {
+                if ( ListPath.Length > 0 && ListPath != "-" && Directory.Exists(ListPath) )
                 {
-                    ReportError("cannot specify both extract and pack modes!");
+                    ReportError("file list output path cannot be a directory");
                     return false;
                 }
-
-                if ( OutputDirectory.Length > 0 && IsInvalidPath(OutputDirectory) )
+                if ( Paths.Count < 1 )
                 {
-                    ReportError("specified output directory is invalid");
+                    ReportError("no file specified");
                     return false;
                 }
-                #endregion
-
-                #region Extract or "Listing" mode validation
-                if ( !UsePackMode )
+                if ( Paths.Contains("-") )
                 {
-                    if ( ListPath.Length > 0 && ListPath != "-" && Directory.Exists(ListPath) )
-                    {
-                        ReportError("file list output path cannot be a directory");
-                        return false;
-                    }
-                    if ( Paths.Count < 1 )
-                    {
-                        ReportError("no file specified");
-                        return false;
-                    }
-                    if ( Paths.Contains("-") )
-                    {
-                        ReportError("STDIN input is not supported in this version");
-                        return false;
-                    }
+                    ReportError("STDIN input is not supported in this version");
+                    return false;
                 }
-                #endregion
+            }
+            #endregion
 
 //                    if ( this.Paths.Count > 1 )
 //                    {
@@ -186,7 +185,7 @@ namespace tenoritool
                     }
                 }
 */
-#if MYFOO
+            #if MYFOO
                     if (!this.SourcePath.Equals(Environment.CurrentDirectory, StringComparison.InvariantCultureIgnoreCase))
                     {
                         if (File.Exists(this.SourcePath))
@@ -208,27 +207,25 @@ namespace tenoritool
                             return false;
                         }
                     }
-#endif
-                return true;
-            }
-
-            private static bool IsInvalidPath(string path)
-            {
-                Regex re = new("^(:|[^a-z]:)|(:.*:)|..:|[" + Regex.Escape(String.Join("", Array.ConvertAll<char, String>(Path.GetInvalidPathChars(), Convert.ToString)) + "*?") + "]", RegexOptions.IgnoreCase);
-                return re.IsMatch(path);
-            }
-            #endregion
+            #endif
+            return true;
         }
 
-
-        private static void ReportError(string message)
+        private static bool IsInvalidPath(string path)
         {
-            StringBuilder builder = new(message.Length * 2);
-            builder.Append(ThisAssembly.Name);
-            builder.Append(": ");
-            builder.Append(message);
-            Console.Error.WriteLine(builder.ToString());
+            Regex re = new("^(:|[^a-z]:)|(:.*:)|..:|[" + Regex.Escape(string.Join("", Array.ConvertAll(Path.GetInvalidPathChars(), Convert.ToString)) + "*?") + "]", RegexOptions.IgnoreCase);
+            return re.IsMatch(path);
         }
+        #endregion
+    }
 
+
+    private static void ReportError(string message)
+    {
+        StringBuilder builder = new(message.Length * 2);
+        builder.Append(ThisAssembly.Name);
+        builder.Append(": ");
+        builder.Append(message);
+        Console.Error.WriteLine(builder.ToString());
     }
 }

@@ -26,35 +26,34 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+
+namespace CommandLine;
+
+static class Validator
 {
-    using System;
-
-    static class Validator
+    public static void CheckIsNull<T>(T value, string paramName)
+        where T : class
     {
-        public static void CheckIsNull<T>(T value, string paramName)
-                where T : class
+        if (value == null)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException(paramName);
-            }
+            throw new ArgumentNullException(paramName);
         }
+    }
 
-        public static void CheckIsNullOrEmpty(string value, string paramName)
+    public static void CheckIsNullOrEmpty(string value, string paramName)
+    {
+        if (string.IsNullOrEmpty(value))
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                throw new ArgumentException(paramName);
-            }
+            throw new ArgumentException(paramName);
         }
+    }
 
-        public static void CheckZeroLength<T>(T[] array, string paramName)
+    public static void CheckZeroLength<T>(T[] array, string paramName)
+    {
+        if (array.Length == 0)
         {
-            if (array.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(paramName);
-            }
+            throw new ArgumentOutOfRangeException(paramName);
         }
     }
 }

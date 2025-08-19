@@ -26,84 +26,83 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+
+namespace CommandLine;
+
+sealed class StringEnumeratorEx : IStringEnumerator
 {
-    using System;
+    private string[] data;
+    private int index;
+    private int endIndex;
 
-    sealed class StringEnumeratorEx : IStringEnumerator
+    public StringEnumeratorEx(string[] value)
     {
-        private string[] data;
-        private int index;
-        private int endIndex;
+        Validator.CheckIsNull(value, "value");
 
-        public StringEnumeratorEx(string[] value)
+        data = value;
+        index = -1;
+        endIndex = value.Length;
+    }
+
+    public string Current
+    {
+        get
         {
-            Validator.CheckIsNull(value, "value");
-
-            data = value;
-            index = -1;
-            endIndex = value.Length;
-        }
-
-        public string Current
-        {
-            get
+            if (index == -1)
             {
-                if (index == -1)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (index >= endIndex)
-                {
-                    throw new InvalidOperationException();
-                }
-                return data[index];
+                throw new InvalidOperationException();
             }
-        }
-
-        public string Next
-        {
-            get
+            if (index >= endIndex)
             {
-                if (index == -1)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (index > endIndex)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (IsLast)
-                {
-                    return null;
-                }
-                return data[index + 1];
+                throw new InvalidOperationException();
             }
+            return data[index];
         }
+    }
 
-        public bool IsLast
+    public string Next
+    {
+        get
         {
-            get { return index == endIndex - 1; }
-        }
-
-        public void Reset()
-        {
-            index = -1;
-        }
-
-        public bool MoveNext()
-        {
-            if (index < endIndex)
+            if (index == -1)
             {
-                index++;
-                return index < endIndex;
+                throw new InvalidOperationException();
             }
-            return false;
+            if (index > endIndex)
+            {
+                throw new InvalidOperationException();
+            }
+            if (IsLast)
+            {
+                return null;
+            }
+            return data[index + 1];
         }
+    }
 
-        public string GetRemainingFromNext()
+    public bool IsLast
+    {
+        get { return index == endIndex - 1; }
+    }
+
+    public void Reset()
+    {
+        index = -1;
+    }
+
+    public bool MoveNext()
+    {
+        if (index < endIndex)
         {
-            throw new NotImplementedException();
+            index++;
+            return index < endIndex;
         }
+        return false;
+    }
+
+    public string GetRemainingFromNext()
+    {
+        throw new NotImplementedException();
     }
 }

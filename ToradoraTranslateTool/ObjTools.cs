@@ -35,7 +35,7 @@ namespace ToradoraTranslateTool
                 File.Copy(archive, newPath, true);
                 File.WriteAllText(Path.Combine(Application.StartupPath, "Data", "Obj", Path.GetFileNameWithoutExtension(archive), Path.GetFileNameWithoutExtension(archive) + ".txt"), archive.Replace(Application.StartupPath, "")); // Write relative path to the original file in Data\Obj\%obj name%\%obj name%.txt
 
-                Process myProc = new Process();
+                Process myProc = new();
                 myProc.StartInfo.FileName = Path.Combine(toolsDirectory, "gzip.exe");
                 myProc.StartInfo.Arguments = "-d -f \"" + newPath + "\""; // -d for decompress, -f (force) for overwrite 
                 myProc.StartInfo.WorkingDirectory = toolsDirectory;
@@ -57,7 +57,7 @@ namespace ToradoraTranslateTool
             File.Copy(archive, newPath, true);
             File.WriteAllText(Path.Combine(Application.StartupPath, "Data", "Txt", Path.GetFileNameWithoutExtension(archive), Path.GetFileNameWithoutExtension(archive) + ".txt"), archive.Replace(Application.StartupPath, "")); // Write relative path to the original file in Data\Txt\%txt name%\%txt name%.txt
 
-            Process myProc = new Process();
+            Process myProc = new();
             myProc.StartInfo.FileName = Path.Combine(toolsDirectory, "gzip.exe");
             myProc.StartInfo.Arguments = "-d -f \"" + newPath + "\""; // -d for decompress, -f (force) for overwrite 
             myProc.StartInfo.WorkingDirectory = toolsDirectory;
@@ -70,7 +70,7 @@ namespace ToradoraTranslateTool
         {
             File.Copy(Path.Combine(firstDirectory, "seekmap.dat"), Path.Combine(toolsDirectory, "seekmap.txt.gz"), true);
 
-            Process myProc = new Process();
+            Process myProc = new();
             myProc.StartInfo.FileName = Path.Combine(toolsDirectory, "gzip.exe");
             myProc.StartInfo.Arguments = "-d -f seekmap.txt.gz"; // -d for decompress, -f (force) for overwrite 
             myProc.StartInfo.WorkingDirectory = toolsDirectory;
@@ -83,12 +83,12 @@ namespace ToradoraTranslateTool
 
         public static void RepackObj(bool debugMode)
         {
-            List<String> directories = new List<string>();
+            List<String> directories = new();
             directories.AddRange(Directory.GetDirectories(Path.Combine(Application.StartupPath, "Data", "Obj")).Select(Path.GetFileName));
 
             JObject mainFile = JObject.Parse(File.ReadAllText(mainFilePath));
 
-            Dictionary<string, string> translatedNames = new Dictionary<string, string>(); // Dictionary with pairs of original and translated names
+            Dictionary<string, string> translatedNames = new(); // Dictionary with pairs of original and translated names
             if (mainFile["names"] != null)
             {
                 foreach (JProperty name in mainFile["names"].Children().ToArray())
@@ -101,7 +101,7 @@ namespace ToradoraTranslateTool
             foreach (string name in directories)
             {
                 string filepath = Path.Combine(Application.StartupPath, "Data", "Obj", name, name);
-                OBJHelper myHelper = new OBJHelper(File.ReadAllBytes(filepath));
+                OBJHelper myHelper = new(File.ReadAllBytes(filepath));
                 string[] scriptStrings = myHelper.Import();
                 Dictionary<int, string> scriptNames = myHelper.actors;
 
@@ -121,7 +121,7 @@ namespace ToradoraTranslateTool
 
                 File.WriteAllBytes(Path.Combine(toolsDirectory, name), myHelper.Export(scriptStrings));
 
-                Process myProc = new Process();
+                Process myProc = new();
                 myProc.StartInfo.FileName = Path.Combine(toolsDirectory, "gzip.exe");
                 myProc.StartInfo.Arguments = "-n9 -f " + name; // Without -n9 the game will freeze
                 myProc.StartInfo.WorkingDirectory = toolsDirectory;
@@ -145,7 +145,7 @@ namespace ToradoraTranslateTool
 
         public static void RepackTxt()
         {
-            List<String> directories = new List<string>();
+            List<String> directories = new();
             directories.AddRange(Directory.GetDirectories(Path.Combine(Application.StartupPath, "Data", "Txt")).Select(Path.GetFileName));
 
             JObject mainFile = JObject.Parse(File.ReadAllText(mainFilePath));
@@ -165,7 +165,7 @@ namespace ToradoraTranslateTool
 
                     File.WriteAllLines(Path.Combine(toolsDirectory, name), fileLines, new UnicodeEncoding(false, false));
 
-                    Process myProc = new Process();
+                    Process myProc = new();
                     myProc.StartInfo.FileName = Path.Combine(toolsDirectory, "gzip.exe");
                     myProc.StartInfo.Arguments = "-n9 -f " + name; // Without -n9 the game will freeze
                     myProc.StartInfo.WorkingDirectory = toolsDirectory;
@@ -183,7 +183,7 @@ namespace ToradoraTranslateTool
         public static void RepackSeekmap(string resourcePath, string firstDirectory)
         {
             File.Copy(resourcePath, Path.Combine(toolsDirectory, "RES.dat"), true); // RES.dat and seekmap.txt required for modseekmap.exe
-            Process myProc = new Process();
+            Process myProc = new();
             myProc.StartInfo.FileName = Path.Combine(toolsDirectory, "modseekmap.exe"); // modseekmap generates seekmap.new file
             myProc.StartInfo.WorkingDirectory = toolsDirectory;
             myProc.Start();

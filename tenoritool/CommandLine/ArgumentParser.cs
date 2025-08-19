@@ -26,45 +26,46 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+
+namespace CommandLine;
+
+internal abstract class ArgumentParser
 {
-    internal abstract class ArgumentParser
+    public abstract ParserState Parse(IStringEnumerator argumentEnumerator, IOptionMap map, object options);
+
+    public static ArgumentParser Create(string argument)
     {
-        public abstract ParserState Parse(IStringEnumerator argumentEnumerator, IOptionMap map, object options);
-
-        public static ArgumentParser Create(string argument)
+        if ( !argument.Equals("-", StringComparison.InvariantCulture) )
         {
-            if ( !argument.Equals("-", System.StringComparison.InvariantCulture) )
+            if ( argument[0] == '-' && argument[1] == '-' )
             {
-                if ( argument[0] == '-' && argument[1] == '-' )
-                {
-                    return new LongOptionParser();
-                }
-                if ( argument[0] == '-' )
-                {
-                    return new OptionGroupParser();
-                }
+                return new LongOptionParser();
             }
-            return null;
-        }
-
-        public static bool IsInputValue(string argument)
-        {
-            if ( argument.Length > 0 )
+            if ( argument[0] == '-' )
             {
-                return argument.Equals("-", System.StringComparison.InvariantCulture) || argument[0] != '-';
+                return new OptionGroupParser();
             }
-            return true;
         }
+        return null;
+    }
 
-        public static bool CompareShort(string argument, string option)
+    public static bool IsInputValue(string argument)
+    {
+        if ( argument.Length > 0 )
         {
-            return string.CompareOrdinal(argument, "-" + option) == 0;
+            return argument.Equals("-", StringComparison.InvariantCulture) || argument[0] != '-';
         }
+        return true;
+    }
 
-        public static bool CompareLong(string argument, string option)
-        {
-            return string.CompareOrdinal(argument, "--" + option) == 0;
-        }
+    public static bool CompareShort(string argument, string option)
+    {
+        return string.CompareOrdinal(argument, "-" + option) == 0;
+    }
+
+    public static bool CompareLong(string argument, string option)
+    {
+        return string.CompareOrdinal(argument, "--" + option) == 0;
     }
 }

@@ -26,110 +26,107 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace CommandLine;
+
+/// <summary>
+/// Models a list of command line arguments that are not options.
+/// Must be applied to a field compatible with an <see cref="System.Collections.Generic.IList&lt;T&gt;"/> interface
+/// of <see cref="System.String"/> instances.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field)]
+public sealed class ValueListAttribute : Attribute
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Reflection;
+    private Type concreteType;
+    private int maximumElements;
+
+    private ValueListAttribute()
+    {
+        maximumElements = -1;
+    }
 
     /// <summary>
-    /// Models a list of command line arguments that are not options.
-    /// Must be applied to a field compatible with an <see cref="System.Collections.Generic.IList&lt;T&gt;"/> interface
-    /// of <see cref="System.String"/> instances.
+    /// Initializes a new instance of the <see cref="CommandLine.ValueListAttribute"/> class.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field,
-            AllowMultiple=false,
-            Inherited=true)]
-    public sealed class ValueListAttribute : Attribute
+    /// <param name="concreteType">A type that implements <see cref="System.Collections.Generic.IList&lt;T&gt;"/>.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="concreteType"/> is null.</exception>
+    public ValueListAttribute(Type concreteType)
+        : this()
     {
-        private Type concreteType;
-        private int maximumElements;
-
-        private ValueListAttribute()
+        if (concreteType == null)
         {
-            maximumElements = -1;
+            throw new ArgumentNullException("concreteType");
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.ValueListAttribute"/> class.
-        /// </summary>
-        /// <param name="concreteType">A type that implements <see cref="System.Collections.Generic.IList&lt;T&gt;"/>.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="concreteType"/> is null.</exception>
-        public ValueListAttribute(Type concreteType)
-            : this()
+        if (!typeof(IList<string>).IsAssignableFrom(concreteType))
         {
-            if (concreteType == null)
-            {
-                throw new ArgumentNullException("concreteType");
-            }
-            if (!typeof(IList<string>).IsAssignableFrom(concreteType))
-            {
-                throw new ParserException("The types are incompatible.");
-            }
-            this.concreteType = concreteType;
+            throw new ParserException("The types are incompatible.");
         }
+        this.concreteType = concreteType;
+    }
 
-        /// <summary>
-        /// Gets or sets the maximum element allow for the list managed by <see cref="CommandLine.ValueListAttribute"/> type.
-        /// If lesser than 0, no upper bound is fixed.
-        /// If equal to 0, no elements are allowed.
-        /// </summary>
-        public int MaximumElements
+    /// <summary>
+    /// Gets or sets the maximum element allow for the list managed by <see cref="CommandLine.ValueListAttribute"/> type.
+    /// If lesser than 0, no upper bound is fixed.
+    /// If equal to 0, no elements are allowed.
+    /// </summary>
+    public int MaximumElements
+    {
+        get { return maximumElements; }
+        set { maximumElements = value; }
+    }
+
+    internal Type ConcreteType
+    {
+        get { return concreteType; }
+    }
+
+    internal static IList<string> GetReference(object target)
+    {
+        Type concreteType;
+        FieldInfo field = GetField(target, out concreteType);
+        if (field == null)
         {
-            get { return maximumElements; }
-            set { maximumElements = value; }
+            return null;
         }
+        field.SetValue(target, Activator.CreateInstance(concreteType));
+        return (IList<string>)field.GetValue(target);
+    }
 
-        internal Type ConcreteType
+    internal static ValueListAttribute GetAttribute(object target)
+    {
+        IList<Pair<FieldInfo, ValueListAttribute>> list =
+            ReflectionUtil.RetrieveFieldList<ValueListAttribute>(target);
+        if (list.Count == 0)
         {
-            get { return concreteType; }
+            return null;
         }
-
-        internal static IList<string> GetReference(object target)
+        if (list.Count > 1)
         {
-            Type concreteType;
-            FieldInfo field = GetField(target, out concreteType);
-            if (field == null)
-            {
-                return null;
-            }
-            field.SetValue(target, Activator.CreateInstance(concreteType));
-            return (IList<string>)field.GetValue(target);
+            throw new InvalidOperationException();
         }
+        Pair<FieldInfo, ValueListAttribute> pairZero = list[0];
+        return pairZero.Right;
+    }
 
-        internal static ValueListAttribute GetAttribute(object target)
+    private static FieldInfo GetField(object target, out Type concreteType)
+    {
+        concreteType = null;
+
+        IList<Pair<FieldInfo, ValueListAttribute>> list =
+            ReflectionUtil.RetrieveFieldList<ValueListAttribute>(target);
+        if (list.Count == 0)
         {
-            IList<Pair<FieldInfo, ValueListAttribute>> list =
-                                ReflectionUtil.RetrieveFieldList<ValueListAttribute>(target);
-            if (list.Count == 0)
-            {
-                return null;
-            }
-            if (list.Count > 1)
-            {
-                throw new InvalidOperationException();
-            }
-            Pair<FieldInfo, ValueListAttribute> pairZero = list[0];
-            return pairZero.Right;
+            return null;
         }
-
-        private static FieldInfo GetField(object target, out Type concreteType)
+        if (list.Count > 1)
         {
-            concreteType = null;
-
-            IList<Pair<FieldInfo, ValueListAttribute>> list =
-                                ReflectionUtil.RetrieveFieldList<ValueListAttribute>(target);
-            if (list.Count == 0)
-            {
-                return null;
-            }
-            if (list.Count > 1)
-            {
-                throw new InvalidOperationException();
-            }
-            Pair<FieldInfo, ValueListAttribute> pairZero = list[0];
-            concreteType = pairZero.Right.ConcreteType;
-            return pairZero.Left;
+            throw new InvalidOperationException();
         }
+        Pair<FieldInfo, ValueListAttribute> pairZero = list[0];
+        concreteType = pairZero.Right.ConcreteType;
+        return pairZero.Left;
     }
 }

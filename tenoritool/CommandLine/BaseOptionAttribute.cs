@@ -26,64 +26,63 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+
+namespace CommandLine;
+
+/// <summary>
+/// Provides base properties for creating an attribute, used to define rules for command line parsing.
+/// </summary>
+public abstract class BaseOptionAttribute : Attribute
 {
-    using System;
+    private string shortName;
+    private string longName;
+    private bool required;
+    private string helpText;
 
     /// <summary>
-    /// Provides base properties for creating an attribute, used to define rules for command line parsing.
+    /// Short name of this command line option. This name is usually a single character.
     /// </summary>
-    public abstract class BaseOptionAttribute : Attribute
+    public string ShortName
     {
-        private string shortName;
-        private string longName;
-        private bool required;
-        private string helpText;
+        get { return shortName; }
+        internal set { shortName = value; }
+    }
 
-        /// <summary>
-        /// Short name of this command line option. This name is usually a single character.
-        /// </summary>
-        public string ShortName
-        {
-            get { return shortName; }
-            internal set { shortName = value; }
-        }
+    /// <summary>
+    /// Long name of this command line option. This name is usually a single english word.
+    /// </summary>
+    public string LongName
+    {
+        get { return longName; }
+        internal set { longName = value; }
+    }
 
-        /// <summary>
-        /// Long name of this command line option. This name is usually a single english word.
-        /// </summary>
-        public string LongName
-        {
-            get { return longName; }
-            internal set { longName = value; }
-        }
+    /// <summary>
+    /// True if this command line option is required.
+    /// </summary>
+    public virtual bool Required
+    {
+        get { return required; }
+        set { required = value; }
+    }
 
-        /// <summary>
-        /// True if this command line option is required.
-        /// </summary>
-        public virtual bool Required
-        {
-            get { return required; }
-            set { required = value; }
-        }
+    internal bool HasShortName
+    {
+        get { return !string.IsNullOrEmpty(shortName); }
+    }
 
-        internal bool HasShortName
-        {
-            get { return !string.IsNullOrEmpty(shortName); }
-        }
+    internal bool HasLongName
+    {
+        get { return !string.IsNullOrEmpty(longName); }
+    }
 
-        internal bool HasLongName
-        {
-            get { return !string.IsNullOrEmpty(longName); }
-        }
-
-        /// <summary>
-        /// A short description of this command line option. Usually a sentence summary. 
-        /// </summary>
-        public string HelpText
-        {
-            get { return helpText; }
-            set { helpText = value; }
-        }
+    /// <summary>
+    /// A short description of this command line option. Usually a sentence summary. 
+    /// </summary>
+    public string HelpText
+    {
+        get { return helpText; }
+        set { helpText = value; }
     }
 }

@@ -26,83 +26,43 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+
+namespace CommandLine;
+
+internal sealed class CharEnumeratorEx : IStringEnumerator
 {
-    using System;
+    private string currentElement;
+    private int index;
+    private readonly string data;
 
-    internal sealed class CharEnumeratorEx : IStringEnumerator
+    public CharEnumeratorEx(string value)
     {
-        private string currentElement;
-        private int index;
-        private readonly string data;
+        Validator.CheckIsNullOrEmpty(value, "value");
 
-        public CharEnumeratorEx(string value)
+        data = value;
+        index = -1;
+    }
+
+    public string Current
+    {
+        get
         {
-            Validator.CheckIsNullOrEmpty(value, "value");
-
-            data = value;
-            index = -1;
-        }
-
-        public string Current
-        {
-            get
+            if (index == -1)
             {
-                if (index == -1)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (index >= data.Length)
-                {
-                    throw new InvalidOperationException();
-                }
-                return currentElement;
+                throw new InvalidOperationException();
             }
-        }
-
-        public string Next
-        {
-            get
+            if (index >= data.Length)
             {
-                if (index == -1)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (index > data.Length)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (IsLast)
-                {
-                    return null;
-                }
-                return data.Substring(index + 1, 1);
+                throw new InvalidOperationException();
             }
+            return currentElement;
         }
+    }
 
-        public bool IsLast
-        {
-            get { return index == data.Length - 1; }
-        }
-
-        public void Reset()
-        {
-            index = -1;
-        }
-
-        public bool MoveNext()
-        {
-            if (index < data.Length - 1)
-            {
-                index++;
-                currentElement = data.Substring(index, 1);
-                return true;
-            }
-            index = data.Length;
-            return false;
-        }
-
-        public string GetRemainingFromNext()
+    public string Next
+    {
+        get
         {
             if (index == -1)
             {
@@ -112,7 +72,46 @@ namespace CommandLine
             {
                 throw new InvalidOperationException();
             }
-            return data.Substring(index + 1);
+            if (IsLast)
+            {
+                return null;
+            }
+            return data.Substring(index + 1, 1);
         }
+    }
+
+    public bool IsLast
+    {
+        get { return index == data.Length - 1; }
+    }
+
+    public void Reset()
+    {
+        index = -1;
+    }
+
+    public bool MoveNext()
+    {
+        if (index < data.Length - 1)
+        {
+            index++;
+            currentElement = data.Substring(index, 1);
+            return true;
+        }
+        index = data.Length;
+        return false;
+    }
+
+    public string GetRemainingFromNext()
+    {
+        if (index == -1)
+        {
+            throw new InvalidOperationException();
+        }
+        if (index > data.Length)
+        {
+            throw new InvalidOperationException();
+        }
+        return data.Substring(index + 1);
     }
 }

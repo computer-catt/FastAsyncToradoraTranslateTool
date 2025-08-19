@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using tenoriTool;
 
 namespace DatWorker;
 
@@ -48,7 +49,7 @@ public class DatWorker(string workingDir) {
 
     private async Task<bool> OpenDat(string dat) {
         try {
-            Console.WriteLine("Extracting: {0}", Path.GetFileName(dat));
+            Console.WriteLine("Extracting: {0}", dat);
             string[] files = await ExtractDatContent(dat);
             List<Task> taskList = [];
             foreach (string file in files) {
@@ -72,23 +73,15 @@ public class DatWorker(string workingDir) {
         if (newDir.StartsWith("\\"))
             newDir = "." + newDir;
 
-        string executable = Path.Combine(workingDir, "Workspace\\Tenoritool\\tenoritool.exe");
         
         List<string> flist = [];
         string isPadded = "N";
-        Process process = new();
-        process.StartInfo = new(executable, $"-l \"\" -v -x -d \"{newDir}\" \"{dat}\"") {
-            WorkingDirectory = workingDir,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        process.ErrorDataReceived += (_, args) => {
-            if (args.Data == null)
+        TenoriToolApi.EventTextWriter meow = new();
+        meow.TextWritten += s => {
+            if (s == null)
                 return;
 
-            string line = args.Data.Trim();
+            string line = s.Trim();
 
             if (line.StartsWith("Is padded with space: ")) {
                 isPadded = line.Replace("Is padded with space: ", "").Substring(0, 1);
@@ -107,10 +100,8 @@ public class DatWorker(string workingDir) {
 
             flist[^1] = ".\\" + line.Trim('^', ' ', '\t') + '\t' + flist.Last();
         };
-        process.Start();
-        process.BeginErrorReadLine();
-        await process.WaitForExitAsync();
         
+        await TenoriToolApi.ProcessIndividualExtract("", newDir, false, true, ConsoleColor.Yellow, "", dat, output: meow);
         bool directoryExist = Directory.Exists(newDir);
         if (!directoryExist) return [];
 

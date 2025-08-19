@@ -26,55 +26,52 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+
+namespace CommandLine;
+
+/// <summary>
+/// Models an option specification.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field)]
+public class OptionAttribute : BaseOptionAttribute
 {
-    using System;
+    private string uniqueName;
 
     /// <summary>
-    /// Models an option specification.
+    /// Initializes a new instance of the <see cref="CommandLine.OptionAttribute"/> class.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field,
-            AllowMultiple=false,
-            Inherited=true)]
-    public class OptionAttribute : BaseOptionAttribute
+    /// <param name="shortName">The short name of the option or null if not used.</param>
+    /// <param name="longName">The long name of the option or null if not used.</param>
+    public OptionAttribute(string shortName, string longName)
     {
-        private string uniqueName;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.OptionAttribute"/> class.
-        /// </summary>
-        /// <param name="shortName">The short name of the option or null if not used.</param>
-        /// <param name="longName">The long name of the option or null if not used.</param>
-        public OptionAttribute(string shortName, string longName)
+        if (!string.IsNullOrEmpty(shortName))
         {
-            if (!string.IsNullOrEmpty(shortName))
-            {
-                uniqueName = shortName;
-            }
-            else if (!string.IsNullOrEmpty(longName))
-            {
-                uniqueName = longName;
-            }
-
-            if (uniqueName == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            ShortName = shortName;
-            LongName = longName;
+            uniqueName = shortName;
+        }
+        else if (!string.IsNullOrEmpty(longName))
+        {
+            uniqueName = longName;
         }
 
-#if UNIT_TESTS
+        if (uniqueName == null)
+        {
+            throw new InvalidOperationException();
+        }
+
+        ShortName = shortName;
+        LongName = longName;
+    }
+
+    #if UNIT_TESTS
         internal OptionInfo CreateOptionInfo()
         {
             return new OptionInfo(this.ShortName, this.LongName);
         }
-#endif
+    #endif
 
-        internal string UniqueName
-        {
-            get { return uniqueName; }
-        }
+    internal string UniqueName
+    {
+        get { return uniqueName; }
     }
 }

@@ -26,27 +26,26 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+namespace CommandLine;
+
+sealed class Pair<TLeft, TRight>
 {
-    sealed class Pair<TLeft, TRight>
+    private readonly TLeft left;
+    private readonly TRight right;
+
+    public Pair(TLeft left, TRight right)
     {
-        private readonly TLeft left;
-        private readonly TRight right;
+        this.left = left;
+        this.right = right;
+    }
 
-        public Pair(TLeft left, TRight right)
-        {
-            this.left = left;
-            this.right = right;
-        }
+    public TLeft Left
+    {
+        get { return left; }
+    }
 
-        public TLeft Left
-        {
-            get { return left; }
-        }
-
-        public TRight Right
-        {
-            get { return right; }
-        }
+    public TRight Right
+    {
+        get { return right; }
     }
 }

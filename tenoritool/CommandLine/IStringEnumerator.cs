@@ -26,17 +26,16 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+namespace CommandLine;
+
+interface IStringEnumerator
 {
-    interface IStringEnumerator
-    {
-        bool MoveNext();
-        string GetRemainingFromNext();
+    bool MoveNext();
+    string GetRemainingFromNext();
 
-        string Current { get; }
-        string Next { get; }
-        bool IsLast { get; }
+    string Current { get; }
+    string Next { get; }
+    bool IsLast { get; }
 
-        void Reset();
-    }
+    void Reset();
 }

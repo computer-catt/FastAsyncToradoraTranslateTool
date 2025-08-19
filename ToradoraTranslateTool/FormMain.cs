@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
-using System.Threading;
 using System.Diagnostics;
 
 namespace ToradoraTranslateTool
@@ -22,6 +21,7 @@ namespace ToradoraTranslateTool
 
             string version = Application.ProductVersion;
             labelVersion.Text = version.Split("+")[0];//.Substring(0, version.Length - 2); // Convert X.X.X.X to X.X.X
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
         // TODO:
@@ -93,38 +93,55 @@ namespace ToradoraTranslateTool
             }
         }
 
-        private async void buttonExtractGame_Click(object sender, EventArgs e)
-        {
-            try
-            {
+        private async void buttonExtractGame_Click(object sender, EventArgs e) {
+            Stopwatch stopwatch = new ();
+            stopwatch.Start();
+            try {
                 ChangeStatus(true);
                 DisableButtons();
 
-                // Resources
+                /*// Resources
                 await Task.Run(() => DatTools.ExtractDat(Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "resource.dat")));
                 await Task.Run(() => ObjTools.ProcessObjGz(Path.Combine(Application.StartupPath, "Data", "DatWorker", "resource")));
-                
+
                 // First
                 await Task.Run(() => DatTools.ExtractDat(Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "first.dat")));
                 await Task.Run(() => ObjTools.ProcessTxtGz(Path.Combine(Application.StartupPath, "Data", "DatWorker", "first")));
-                await Task.Run(() => ObjTools.ProcessSeekmap(Path.Combine(Application.StartupPath, "Data", "DatWorker", "first")));
+                await Task.Run(() => ObjTools.ProcessSeekmap(Path.Combine(Application.StartupPath, "Data", "DatWorker", "first")));*/
+
+                await Task.WhenAll(
+                    Task.Run(() => { // resource
+                        DatTools.ExtractDat(Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "resource.dat")).Wait();
+                        ObjTools.ProcessObjGz(Path.Combine(Application.StartupPath, "Data", "DatWorker", "resource"));
+                    }),
+                    Task.Run(() => { // first
+                        DatTools.ExtractDat(Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "first.dat")).Wait();
+                        ObjTools.ProcessTxtGz(Path.Combine(Application.StartupPath, "Data", "DatWorker", "first"));
+                        ObjTools.ProcessSeekmap(Path.Combine(Application.StartupPath, "Data", "DatWorker", "first"));
+                    })
+                );
 
                 ChangeStatus(false);
                 EnableButtons();
 
-                MessageBox.Show("Game files extraction completed", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                stopwatch.Stop();
+                MessageBox.Show($"Game files extraction completed in {stopwatch.ElapsedMilliseconds} ms", "ToradoraTranslateTool", MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 ChangeStatus(false);
                 EnableButtons();
-                MessageBox.Show("Error!" + Environment.NewLine + ex.ToString(), "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                stopwatch.Stop();
+                MessageBox.Show($"Error! in {stopwatch.ElapsedMilliseconds} ms" + Environment.NewLine + ex, "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally {
+                stopwatch.Stop();
             }
         }
 
         private void buttonTranslate_Click(object sender, EventArgs e)
         {
-            FormTranslation myForm = new FormTranslation();
+            FormTranslation myForm = new();
             myForm.Show();
         }
 

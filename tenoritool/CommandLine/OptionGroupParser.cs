@@ -26,71 +26,61 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+namespace CommandLine;
+
+sealed class OptionGroupParser : ArgumentParser
 {
-    sealed class OptionGroupParser : ArgumentParser
+    public override ParserState Parse(IStringEnumerator argumentEnumerator, IOptionMap map, object options)
     {
-        public sealed override ParserState Parse(IStringEnumerator argumentEnumerator, IOptionMap map, object options)
+        IStringEnumerator group = new CharEnumeratorEx(argumentEnumerator.Current.Substring(1));
+        while (group.MoveNext())
         {
-            IStringEnumerator group = new CharEnumeratorEx(argumentEnumerator.Current.Substring(1));
-            while (group.MoveNext())
+            OptionInfo option = map[group.Current];
+            if (option == null)
             {
-                OptionInfo option = map[group.Current];
-                if (option == null)
+                return ParserState.Failure;
+            }
+
+            option.IsDefined = true;
+
+            if (!option.IsBoolean)
+            {
+                if (argumentEnumerator.IsLast && group.IsLast)
                 {
                     return ParserState.Failure;
                 }
 
-                option.IsDefined = true;
-
-                if (!option.IsBoolean)
-                {
-                    if (argumentEnumerator.IsLast && group.IsLast)
+                if (!group.IsLast) {
+                    if (option.SetValue(group.GetRemainingFromNext(), options))
                     {
-                        return ParserState.Failure;
+                        return ParserState.Success;
                     }
 
-                    if (!group.IsLast)
-                    {
-                        if (option.SetValue(group.GetRemainingFromNext(), options))
-                        {
-                            return ParserState.Success;
-                        }
-                        else
-                        {
-                            return ParserState.Failure;
-                        }
-                    }
-
-                    if (!argumentEnumerator.IsLast && !IsInputValue(argumentEnumerator.Next))
-                    {
-                        return ParserState.Failure;
-                    }
-                    else
-                    {
-                        if (option.SetValue(argumentEnumerator.Next, options))
-                        {
-                            return ParserState.Success | ParserState.MoveOnNextElement;
-                        }
-                        else
-                        {
-                            return ParserState.Failure;
-                        }
-                    }
+                    return ParserState.Failure;
                 }
-                else
+
+                if (!argumentEnumerator.IsLast && !IsInputValue(argumentEnumerator.Next))
                 {
-                    if (!group.IsLast && map[group.Next] == null)
-                    {
-                        return ParserState.Failure;
-                    }
-                    if (!option.SetValue(true, options))
-                    {
-                        return ParserState.Failure;
-                    }
+                    return ParserState.Failure;
                 }
+
+                if (option.SetValue(argumentEnumerator.Next, options))
+                {
+                    return ParserState.Success | ParserState.MoveOnNextElement;
+                }
+
+                return ParserState.Failure;
             }
-            return ParserState.Success;
+
+            if (!group.IsLast && map[group.Next] == null)
+            {
+                return ParserState.Failure;
+            }
+            if (!option.SetValue(true, options))
+            {
+                return ParserState.Failure;
+            }
         }
+        return ParserState.Success;
     }
 }

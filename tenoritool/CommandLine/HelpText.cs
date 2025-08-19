@@ -26,248 +26,241 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine.Text
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace CommandLine.Text;
+
+/// <summary>
+/// Models an help text and collects related informations.
+/// You can assign it in place of a <see cref="System.String"/> instance, this is why
+/// this type lacks a method to add lines after the options usage informations;
+/// simple use a <see cref="System.Text.StringBuilder"/> or similar solutions.
+/// </summary>
+public class HelpText
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
+    #region Private Members
+    private const int builderCapacity = 128;
+    private readonly string heading;
+    private string copyright;
+    private StringBuilder preOptionsHelp;
+    private StringBuilder optionsHelp;
+    private static readonly string defaultRequiredWord = "Required.";
+    #endregion
+
+    private HelpText()
+    {
+        preOptionsHelp = new StringBuilder(builderCapacity);
+    }
 
     /// <summary>
-    /// Models an help text and collects related informations.
-    /// You can assign it in place of a <see cref="System.String"/> instance, this is why
-    /// this type lacks a method to add lines after the options usage informations;
-    /// simple use a <see cref="System.Text.StringBuilder"/> or similar solutions.
+    /// Initializes a new instance of the <see cref="CommandLine.Text.HelpText"/> class
+    /// specifying heading informations.
     /// </summary>
-    public class HelpText
+    /// <param name="heading">A string with heading information or
+    /// an instance of <see cref="CommandLine.Text.HeadingInfo"/>.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="heading"/> is null or empty string.</exception>
+    public HelpText(string heading)
+        : this()
     {
-        #region Private Members
-        private const int builderCapacity = 128;
-        private readonly string heading;
-        private string copyright;
-        private StringBuilder preOptionsHelp;
-        private StringBuilder optionsHelp;
-        private static readonly string defaultRequiredWord = "Required.";
-        #endregion
+        Validator.CheckIsNullOrEmpty(heading, "heading");
 
-        private HelpText()
+        this.heading = heading;
+    }
+
+    /// <summary>
+    /// Sets the copyright information string.
+    /// You can directly assign a <see cref="CommandLine.Text.CopyrightInfo"/> instance.
+    /// </summary>
+    public string Copyright
+    {
+        set
         {
-            preOptionsHelp = new StringBuilder(builderCapacity);
+            Validator.CheckIsNullOrEmpty(value, "value");
+            copyright = value;
+        }
+    }
+
+    /// <summary>
+    /// Adds a text line after copyright and before options usage informations.
+    /// </summary>
+    /// <param name="value">A <see cref="System.String"/> instance.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="value"/> is null or empty string.</exception>
+    public void AddPreOptionsLine(string value)
+    {
+        AddLine(preOptionsHelp, value);
+    }
+
+    /// <summary>
+    /// Adds a text block with options usage informations.
+    /// </summary>
+    /// <param name="options">The instance that collected command line arguments parsed with <see cref="CommandLine.Parser"/> class.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="options"/> is null.</exception>
+    public void AddOptions(object options)
+    {
+        AddOptions(options, defaultRequiredWord);
+    }
+
+    /// <summary>
+    /// Adds a text block with options usage informations.
+    /// </summary>
+    /// <param name="options">The instance that collected command line arguments parsed with the <see cref="CommandLine.Parser"/> class.</param>
+    /// <param name="requiredWord">The word to use when the option is required.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="options"/> is null.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="requiredWord"/> is null or empty string.</exception>
+    public void AddOptions(object options, string requiredWord)
+    {
+        Validator.CheckIsNull(options, "options");
+        Validator.CheckIsNullOrEmpty(requiredWord, "requiredWord");
+
+        IList<BaseOptionAttribute> optionList =
+            ReflectionUtil.RetrieveFieldAttributeList<BaseOptionAttribute>(options);
+
+        HelpOptionAttribute optionHelp =
+            ReflectionUtil.RetrieveMethodAttributeOnly<HelpOptionAttribute>(options);
+        if (optionHelp != null)
+        {
+            optionList.Add(optionHelp);
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.Text.HelpText"/> class
-        /// specifying heading informations.
-        /// </summary>
-        /// <param name="heading">A string with heading information or
-        /// an instance of <see cref="CommandLine.Text.HeadingInfo"/>.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="heading"/> is null or empty string.</exception>
-        public HelpText(string heading)
-            : this()
+        if (optionList.Count == 0)
         {
-            Validator.CheckIsNullOrEmpty(heading, "heading");
-
-            this.heading = heading;
+            return;
         }
 
-        /// <summary>
-        /// Sets the copyright information string.
-        /// You can directly assign a <see cref="CommandLine.Text.CopyrightInfo"/> instance.
-        /// </summary>
-        public string Copyright
+        int maxLength = GetMaxLength(optionList);
+        optionsHelp = new StringBuilder(builderCapacity);
+
+        foreach (BaseOptionAttribute option in optionList)
         {
-            set
+            optionsHelp.Append("  ");
+            StringBuilder optionName = new(maxLength);
+            if (option.HasShortName)
             {
-                Validator.CheckIsNullOrEmpty(value, "value");
-                copyright = value;
-            }
-        }
-
-        /// <summary>
-        /// Adds a text line after copyright and before options usage informations.
-        /// </summary>
-        /// <param name="value">A <see cref="System.String"/> instance.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="value"/> is null or empty string.</exception>
-        public void AddPreOptionsLine(string value)
-        {
-            AddLine(preOptionsHelp, value);
-        }
-
-        /// <summary>
-        /// Adds a text block with options usage informations.
-        /// </summary>
-        /// <param name="options">The instance that collected command line arguments parsed with <see cref="CommandLine.Parser"/> class.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="options"/> is null.</exception>
-        public void AddOptions(object options)
-        {
-            AddOptions(options, defaultRequiredWord);
-        }
-
-        /// <summary>
-        /// Adds a text block with options usage informations.
-        /// </summary>
-        /// <param name="options">The instance that collected command line arguments parsed with the <see cref="CommandLine.Parser"/> class.</param>
-        /// <param name="requiredWord">The word to use when the option is required.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="options"/> is null.</exception>
-        /// <exception cref="System.ArgumentNullException">Thrown when parameter <paramref name="requiredWord"/> is null or empty string.</exception>
-        public void AddOptions(object options, string requiredWord)
-        {
-            Validator.CheckIsNull(options, "options");
-            Validator.CheckIsNullOrEmpty(requiredWord, "requiredWord");
-
-            IList<BaseOptionAttribute> optionList =
-                                ReflectionUtil.RetrieveFieldAttributeList<BaseOptionAttribute>(options);
-
-            HelpOptionAttribute optionHelp =
-                                ReflectionUtil.RetrieveMethodAttributeOnly<HelpOptionAttribute>(options);
-            if (optionHelp != null)
-            {
-                optionList.Add(optionHelp);
-            }
-
-            if (optionList.Count == 0)
-            {
-                return;
-            }
-
-            int maxLength = GetMaxLength(optionList);
-            optionsHelp = new StringBuilder(builderCapacity);
-
-            foreach (BaseOptionAttribute option in optionList)
-            {
-                optionsHelp.Append("  ");
-                StringBuilder optionName = new(maxLength);
-                if (option.HasShortName)
-                {
-                    optionName.Append(option.ShortName);
-                    if (option.HasLongName)
-                    {
-                        optionName.Append(", ");
-                    }
-                }
+                optionName.Append(option.ShortName);
                 if (option.HasLongName)
                 {
-                    optionName.Append(option.LongName);
+                    optionName.Append(", ");
                 }
-                if (optionName.Length < maxLength)
-                {
-                    optionsHelp.Append(optionName.ToString().PadRight(maxLength));
-                }
-                else
-                {
-                    optionsHelp.Append(optionName.ToString());
-                }
-                optionsHelp.Append("\t");
-                if (option.Required)
-                {
-                    optionsHelp.Append(requiredWord);
-                    optionsHelp.Append(' ');
-                }
-                optionsHelp.Append(option.HelpText);
-                optionsHelp.Append(Environment.NewLine);
             }
+            if (option.HasLongName)
+            {
+                optionName.Append(option.LongName);
+            }
+            if (optionName.Length < maxLength)
+            {
+                optionsHelp.Append(optionName.ToString().PadRight(maxLength));
+            }
+            else
+            {
+                optionsHelp.Append(optionName.ToString());
+            }
+            optionsHelp.Append("\t");
+            if (option.Required)
+            {
+                optionsHelp.Append(requiredWord);
+                optionsHelp.Append(' ');
+            }
+            optionsHelp.Append(option.HelpText);
+            optionsHelp.Append(Environment.NewLine);
         }
+    }
 
-        /// <summary>
-        /// Returns the help informations as a <see cref="System.String"/>.
-        /// </summary>
-        /// <returns>The <see cref="System.String"/> that contains the help informations.</returns>
-        public override string ToString()
+    /// <summary>
+    /// Returns the help informations as a <see cref="System.String"/>.
+    /// </summary>
+    /// <returns>The <see cref="System.String"/> that contains the help informations.</returns>
+    public override string ToString()
+    {
+        const int extraLength = 10;
+        StringBuilder builder = new(heading.Length +
+                                    GetLength(copyright) + GetLength(preOptionsHelp) +
+                                    GetLength(optionsHelp) + extraLength);
+
+        builder.Append(heading);
+        if (!string.IsNullOrEmpty(copyright))
         {
-            const int extraLength = 10;
-            StringBuilder builder = new(heading.Length +
-                                GetLength(copyright) + GetLength(preOptionsHelp) +
-                                 GetLength(optionsHelp) + extraLength);
-
-            builder.Append(heading);
-            if (!string.IsNullOrEmpty(copyright))
-            {
-                builder.Append(Environment.NewLine);
-                builder.Append(copyright);
-            }
-            if (preOptionsHelp.Length > 0)
-            {
-                builder.Append(Environment.NewLine);
-                builder.Append(preOptionsHelp.ToString());
-            }
-            if (optionsHelp != null && optionsHelp.Length > 0)
-            {
+            builder.Append(Environment.NewLine);
+            builder.Append(copyright);
+        }
+        if (preOptionsHelp.Length > 0)
+        {
+            builder.Append(Environment.NewLine);
+            builder.Append(preOptionsHelp.ToString());
+        }
+        if (optionsHelp != null && optionsHelp.Length > 0)
+        {
 //                builder.Append(Environment.NewLine);
-                builder.Append(Environment.NewLine);
-                builder.Append(optionsHelp.ToString());
-            }
-
-            return builder.ToString();
+            builder.Append(Environment.NewLine);
+            builder.Append(optionsHelp.ToString());
         }
 
-        /// <summary>
-        /// Converts the help informations to a <see cref="System.String"/>.
-        /// </summary>
-        /// <param name="info">This <see cref="CommandLine.Text.HelpText"/> instance.</param>
-        /// <returns>The <see cref="System.String"/> that contains the help informations.</returns>
-        public static implicit operator string(HelpText info)
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Converts the help informations to a <see cref="System.String"/>.
+    /// </summary>
+    /// <param name="info">This <see cref="CommandLine.Text.HelpText"/> instance.</param>
+    /// <returns>The <see cref="System.String"/> that contains the help informations.</returns>
+    public static implicit operator string(HelpText info)
+    {
+        return info.ToString();
+    }
+
+    private static void AddLine(StringBuilder builder, string value)
+    {
+        //Validator.CheckIsNullOrEmpty(value, "value");
+        Validator.CheckIsNull(value, "value");
+
+        if (builder.Length > 0)
         {
-            return info.ToString();
+            builder.Append(Environment.NewLine);
         }
+        builder.Append(value);
+    }
 
-        private static void AddLine(StringBuilder builder, string value)
+    private static int GetLength(string value) {
+        if (value == null)
         {
-            //Validator.CheckIsNullOrEmpty(value, "value");
-            Validator.CheckIsNull(value, "value");
-
-            if (builder.Length > 0)
-            {
-                builder.Append(Environment.NewLine);
-            }
-            builder.Append(value);
+            return 0;
         }
 
-        private static int GetLength(string value)
+        return value.Length;
+    }
+
+    private static int GetLength(StringBuilder value) {
+        if (value == null)
         {
-            if (value == null)
-            {
-                return 0;
-            }
-            else
-            {
-                return value.Length;
-            }
+            return 0;
         }
 
-        private static int GetLength(StringBuilder value)
-        {
-            if (value == null)
-            {
-                return 0;
-            }
-            else
-            {
-                return value.Length;
-            }
-        }
+        return value.Length;
+    }
 
-        private static int GetMaxLength(IList<BaseOptionAttribute> optionList)
+    private static int GetMaxLength(IList<BaseOptionAttribute> optionList)
+    {
+        int length = 0;
+        foreach (BaseOptionAttribute option in optionList)
         {
-            int length = 0;
-            foreach (BaseOptionAttribute option in optionList)
+            int optionLenght = 0;
+            bool hasShort = option.HasShortName;
+            bool hasLong = option.HasLongName;
+            if (hasShort)
             {
-                int optionLenght = 0;
-                bool hasShort = option.HasShortName;
-                bool hasLong = option.HasLongName;
-                if (hasShort)
-                {
-                    optionLenght += option.ShortName.Length;
-                }
-                if (hasLong)
-                {
-                    optionLenght += option.LongName.Length;
-                }
-                if (hasShort && hasLong)
-                {
-                    optionLenght += 2; // ", "
-                }
-                length = Math.Max(length, optionLenght);
+                optionLenght += option.ShortName.Length;
             }
-            return length;
+            if (hasLong)
+            {
+                optionLenght += option.LongName.Length;
+            }
+            if (hasShort && hasLong)
+            {
+                optionLenght += 2; // ", "
+            }
+            length = Math.Max(length, optionLenght);
         }
+        return length;
     }
 }

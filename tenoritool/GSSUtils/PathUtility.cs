@@ -26,24 +26,23 @@
 // THE SOFTWARE.
 #endregion
 
-namespace GSSUtils
+using System.Globalization;
+using System.IO;
+
+namespace GSSUtils;
+
+static class PathUtility
 {
-    using System.Globalization;
-    using System.IO;
+    public static readonly string DirectorySeparatorString = Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
 
-    static class PathUtility
+    public static string GetBaseName(string absolutePath, string path)
     {
-        public static readonly string DirectorySeparatorString = Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
-
-        public static string GetBaseName(string absolutePath, string path)
+        string baseName = path.Remove(0, absolutePath.Length);
+        if (baseName.StartsWith(DirectorySeparatorString))
         {
-            string baseName = path.Remove(0, absolutePath.Length);
-            if (baseName.StartsWith(DirectorySeparatorString))
-            {
-                baseName = baseName.Remove(0, 1);
-            }
-            return baseName;
+            baseName = baseName.Remove(0, 1);
         }
-
+        return baseName;
     }
+
 }

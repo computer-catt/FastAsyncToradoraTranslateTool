@@ -26,40 +26,36 @@
 // THE SOFTWARE.
 #endregion
 
-namespace tenoritool
+using System;
+
+namespace tenoriTool;
+
+class BinaryIO
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-
-
-    class BinaryIO
+    public static uint ReadUInt32(byte[] data, int offset)
     {
-        public static UInt32 ReadUInt32(byte[] data, int offset)
-        {
-            return Convert.ToUInt32(
-                    data[offset++]
-                 | (data[offset++] << 8)
-                 | (data[offset++] << 16)
-                 | (data[offset++] << 24)
-                 );
-        }
-
-        public static UInt32 ReadUInt32(byte[] data)
-        {
-            return ReadUInt32(data, 0);
-        }
-
-
-        public static UInt64 ReadUInt64(byte[] data, int offset)
-        {
-            return Convert.ToUInt64(ReadUInt32(data, offset)) + (Convert.ToUInt64(ReadUInt32(data, offset + 4)) << 32);
-        }
-
-        public static UInt64 ReadUInt64(byte[] data)
-        {
-            return ReadUInt64(data, 0);
-        }
-    
+        return Convert.ToUInt32(
+            data[offset++]
+            | (data[offset++] << 8)
+            | (data[offset++] << 16)
+            | (data[offset++] << 24)
+        );
     }
+
+    public static uint ReadUInt32(byte[] data)
+    {
+        return ReadUInt32(data, 0);
+    }
+
+
+    public static ulong ReadUInt64(byte[] data, int offset)
+    {
+        return Convert.ToUInt64(ReadUInt32(data, offset)) + (Convert.ToUInt64(ReadUInt32(data, offset + 4)) << 32);
+    }
+
+    public static ulong ReadUInt64(byte[] data)
+    {
+        return ReadUInt64(data, 0);
+    }
+    
 }

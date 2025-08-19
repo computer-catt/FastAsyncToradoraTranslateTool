@@ -26,61 +26,60 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System.Collections.Generic;
+
+namespace CommandLine;
+
+sealed class OptionMap : IOptionMap
 {
-    using System.Collections.Generic;
+    private Dictionary<string, string> names;
+    private Dictionary<string, OptionInfo> map;
 
-    sealed class OptionMap : IOptionMap
+    public OptionMap(int capacity)
     {
-        private Dictionary<string, string> names;
-        private Dictionary<string, OptionInfo> map;
+        names = new Dictionary<string, string>(capacity);
+        map = new Dictionary<string, OptionInfo>(capacity * 2);
+    }
 
-        public OptionMap(int capacity)
+    public OptionInfo this[string key]
+    {
+        get
         {
-            names = new Dictionary<string, string>(capacity);
-            map = new Dictionary<string, OptionInfo>(capacity * 2);
-        }
-
-        public OptionInfo this[string key]
-        {
-            get
+            OptionInfo option = null;
+            if (map.ContainsKey(key))
             {
-                OptionInfo option = null;
-                if (map.ContainsKey(key))
-                {
-                    option = map[key];
-                }
-                else
-                {
-                    string optionKey = null;
-                    if (names.ContainsKey(key))
-                    {
-                        optionKey = names[key];
-                        option = map[optionKey];
-                    }
-                }
-                return option;
+                option = map[key];
             }
-            set
+            else
             {
-                map[key] = value;
-                if (value.HasBothNames)
+                string optionKey = null;
+                if (names.ContainsKey(key))
                 {
-                    names[value.LongName] = value.ShortName;
+                    optionKey = names[key];
+                    option = map[optionKey];
                 }
             }
+            return option;
         }
-
-        public bool EnforceRules()
+        set
         {
-            foreach (OptionInfo option in map.Values)
+            map[key] = value;
+            if (value.HasBothNames)
             {
-                if (option.Required && !option.IsDefined)
-                {
-                    return false;
-                }
+                names[value.LongName] = value.ShortName;
             }
-            return true;
         }
+    }
+
+    public bool EnforceRules()
+    {
+        foreach (OptionInfo option in map.Values)
+        {
+            if (option.Required && !option.IsDefined)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

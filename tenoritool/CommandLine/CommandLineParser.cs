@@ -26,174 +26,173 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+
+namespace CommandLine;
+
+/// <summary>
+/// Provides methods to parse command line arguments.
+/// Default implementation for <see cref="CommandLine.ICommandLineParser"/>.
+/// </summary>
+public class CommandLineParser : ICommandLineParser
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Reflection;
+    private object valueListLock = new();
 
     /// <summary>
-    /// Provides methods to parse command line arguments.
-    /// Default implementation for <see cref="CommandLine.ICommandLineParser"/>.
+    /// Parses a <see cref="System.String"/> array of command line arguments,
+    /// setting values read in <paramref name="options"/> parameter instance.
     /// </summary>
-    public class CommandLineParser : ICommandLineParser
+    /// <param name="args">A <see cref="System.String"/> array of command line arguments.</param>
+    /// <param name="options">An instance to receive values.
+    /// Parsing rules are defined using <see cref="CommandLine.BaseOptionAttribute"/> derived types.</param>
+    /// <returns>True if parsing process succeed.</returns>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="args"/> is null.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+    public virtual bool ParseArguments(string[] args, object options)
     {
-        private object valueListLock = new();
+        Validator.CheckIsNull(args, "args");
+        Validator.CheckIsNull(options, "options");
 
-        /// <summary>
-        /// Parses a <see cref="System.String"/> array of command line arguments,
-        /// setting values read in <paramref name="options"/> parameter instance.
-        /// </summary>
-        /// <param name="args">A <see cref="System.String"/> array of command line arguments.</param>
-        /// <param name="options">An instance to receive values.
-        /// Parsing rules are defined using <see cref="CommandLine.BaseOptionAttribute"/> derived types.</param>
-        /// <returns>True if parsing process succeed.</returns>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="args"/> is null.</exception>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
-        public virtual bool ParseArguments(string[] args, object options)
+        int erroneousArgumentIndex;
+        return ParseArgumentList(args, options, out erroneousArgumentIndex);
+    }
+
+    /// <summary>
+    /// Parses a <see cref="System.String"/> array of command line arguments,
+    /// setting values read in <paramref name="options"/> parameter instance.
+    /// This overloads allows you to specify a <see cref="System.IO.TextWriter"/>
+    /// derived instance for write text messages.         
+    /// </summary>
+    /// <param name="args">A <see cref="System.String"/> array of command line arguments.</param>
+    /// <param name="options">An instance to receive values.
+    /// Parsing rules are defined using <see cref="CommandLine.BaseOptionAttribute"/> derived types.</param>
+    /// <param name="helpWriter">Any instance derived from <see cref="System.IO.TextWriter"/>,
+    /// usually <see cref="System.Console.Out"/>.</param>
+    /// <returns>True if parsing process succeed.</returns>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="args"/> is null.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="helpWriter"/> is null.</exception>
+    public virtual bool ParseArguments(string[] args, object options, TextWriter helpWriter)
+    {
+        Validator.CheckIsNull(args, "args");
+        Validator.CheckIsNull(options, "options");
+        Validator.CheckIsNull(helpWriter, "helpWriter");
+
+        Pair<MethodInfo, HelpOptionAttribute> pair =
+            ReflectionUtil.RetrieveMethod<HelpOptionAttribute>(options);
+        if (pair == null)
         {
-            Validator.CheckIsNull(args, "args");
-            Validator.CheckIsNull(options, "options");
-
-            int erroneousArgumentIndex;
-            return ParseArgumentList(args, options, out erroneousArgumentIndex);
+            throw new InvalidOperationException();
         }
 
-        /// <summary>
-        /// Parses a <see cref="System.String"/> array of command line arguments,
-        /// setting values read in <paramref name="options"/> parameter instance.
-        /// This overloads allows you to specify a <see cref="System.IO.TextWriter"/>
-        /// derived instance for write text messages.         
-        /// </summary>
-        /// <param name="args">A <see cref="System.String"/> array of command line arguments.</param>
-        /// <param name="options">An instance to receive values.
-        /// Parsing rules are defined using <see cref="CommandLine.BaseOptionAttribute"/> derived types.</param>
-        /// <param name="helpWriter">Any instance derived from <see cref="System.IO.TextWriter"/>,
-        /// usually <see cref="System.Console.Out"/>.</param>
-        /// <returns>True if parsing process succeed.</returns>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="args"/> is null.</exception>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="helpWriter"/> is null.</exception>
-        public virtual bool ParseArguments(string[] args, object options, TextWriter helpWriter)
+        if (ParseHelp(args, pair.Right))
         {
-            Validator.CheckIsNull(args, "args");
-            Validator.CheckIsNull(options, "options");
-            Validator.CheckIsNull(helpWriter, "helpWriter");
-
-            Pair<MethodInfo, HelpOptionAttribute> pair =
-                                ReflectionUtil.RetrieveMethod<HelpOptionAttribute>(options);
-            if (pair == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            if (ParseHelp(args, pair.Right))
-            {
-                string helpText;
-                HelpOptionAttribute.InvokeMethod(options, pair, false, out helpText);
-                helpWriter.Write(helpText);
-                return false;
-            }
-            int erroneousArgumentIndex;
-            if ( !ParseArgumentList(args, options, out erroneousArgumentIndex) )
-            {
-                string helpText;
-                HelpOptionAttribute.InvokeMethod(options, pair, true, out helpText);
-                helpWriter.Write(helpText);
-                helpWriter.Write($"Incorrect use of parameter: {args[erroneousArgumentIndex]}");
-                return false;
-            }
-            return true;
+            string helpText;
+            HelpOptionAttribute.InvokeMethod(options, pair, false, out helpText);
+            helpWriter.Write(helpText);
+            return false;
         }
-
-        private bool ParseArgumentList(string[] args, object options, out int erroneousArgumentIndex)
+        int erroneousArgumentIndex;
+        if ( !ParseArgumentList(args, options, out erroneousArgumentIndex) )
         {
-            bool hadError = false;
-            IOptionMap optionMap = OptionInfo.CreateMap(options);
-            IList<string> valueList = ValueListAttribute.GetReference(options);
-            ValueListAttribute vlAttr = ValueListAttribute.GetAttribute(options);
+            string helpText;
+            HelpOptionAttribute.InvokeMethod(options, pair, true, out helpText);
+            helpWriter.Write(helpText);
+            helpWriter.Write($"Incorrect use of parameter: {args[erroneousArgumentIndex]}");
+            return false;
+        }
+        return true;
+    }
 
-            IStringEnumerator arguments = new StringEnumeratorEx(args);
-            erroneousArgumentIndex = 0;
-            while ( arguments.MoveNext() )
+    private bool ParseArgumentList(string[] args, object options, out int erroneousArgumentIndex)
+    {
+        bool hadError = false;
+        IOptionMap optionMap = OptionInfo.CreateMap(options);
+        IList<string> valueList = ValueListAttribute.GetReference(options);
+        ValueListAttribute vlAttr = ValueListAttribute.GetAttribute(options);
+
+        IStringEnumerator arguments = new StringEnumeratorEx(args);
+        erroneousArgumentIndex = 0;
+        while ( arguments.MoveNext() )
+        {
+            string argument = arguments.Current;
+            if (argument != null && argument.Length > 0)
             {
-                string argument = arguments.Current;
-                if (argument != null && argument.Length > 0)
+                ArgumentParser parser = ArgumentParser.Create(argument);
+                if (parser != null)
                 {
-                    ArgumentParser parser = ArgumentParser.Create(argument);
-                    if (parser != null)
+                    ParserState result = parser.Parse(arguments, optionMap, options);
+                    if ((result & ParserState.Failure) == ParserState.Failure)
                     {
-                        ParserState result = parser.Parse(arguments, optionMap, options);
-                        if ((result & ParserState.Failure) == ParserState.Failure)
+                        hadError = true;
+                        break;
+                    }
+                    if ((result & ParserState.MoveOnNextElement) == ParserState.MoveOnNextElement)
+                    {
+                        ++erroneousArgumentIndex;
+                        arguments.MoveNext();
+                    }
+                }
+                else if (valueList != null)
+                {
+                    if (vlAttr.MaximumElements < 0)
+                    {
+                        lock (valueListLock)
                         {
-                            hadError = true;
-                            break;
-                        }
-                        if ((result & ParserState.MoveOnNextElement) == ParserState.MoveOnNextElement)
-                        {
-                            ++erroneousArgumentIndex;
-                            arguments.MoveNext();
+                            valueList.Add(argument);
                         }
                     }
-                    else if (valueList != null)
+                    else if (vlAttr.MaximumElements == 0)
                     {
-                        if (vlAttr.MaximumElements < 0)
+                        hadError = true;
+                        break;
+                    }
+                    else
+                    {
+                        if (vlAttr.MaximumElements > valueList.Count)
                         {
                             lock (valueListLock)
                             {
                                 valueList.Add(argument);
                             }
                         }
-                        else if (vlAttr.MaximumElements == 0)
+                        else
                         {
                             hadError = true;
                             break;
                         }
-                        else
-                        {
-                            if (vlAttr.MaximumElements > valueList.Count)
-                            {
-                                lock (valueListLock)
-                                {
-                                    valueList.Add(argument);
-                                }
-                            }
-                            else
-                            {
-                                hadError = true;
-                                break;
-                            }
-                        }
                     }
-                    ++erroneousArgumentIndex;
                 }
+                ++erroneousArgumentIndex;
             }
-
-            hadError |= !optionMap.EnforceRules();
-            return !hadError;
         }
 
-        private bool ParseHelp(string[] args, HelpOptionAttribute helpOption)
+        hadError |= !optionMap.EnforceRules();
+        return !hadError;
+    }
+
+    private bool ParseHelp(string[] args, HelpOptionAttribute helpOption)
+    {
+        for (int i = 0; i < args.Length; i++)
         {
-            for (int i = 0; i < args.Length; i++)
+            if (!string.IsNullOrEmpty(helpOption.ShortName))
             {
-                if (!string.IsNullOrEmpty(helpOption.ShortName))
+                if (ArgumentParser.CompareShort(args[i], helpOption.ShortName))
                 {
-                    if (ArgumentParser.CompareShort(args[i], helpOption.ShortName))
-                    {
-                        return true;
-                    }
-                }
-                if (!string.IsNullOrEmpty(helpOption.LongName))
-                {
-                    if (ArgumentParser.CompareLong(args[i], helpOption.LongName))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
-            return false;
+            if (!string.IsNullOrEmpty(helpOption.LongName))
+            {
+                if (ArgumentParser.CompareLong(args[i], helpOption.LongName))
+                {
+                    return true;
+                }
+            }
         }
+        return false;
     }
 }

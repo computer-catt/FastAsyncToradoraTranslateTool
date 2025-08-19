@@ -26,151 +26,150 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine.Text
+using System.Globalization;
+using System.Text;
+
+namespace CommandLine.Text;
+
+/// <summary>
+/// Models the copyright informations part of an help text.
+/// You can assign it where you assign any <see cref="System.String"/> instance.
+/// </summary>
+public class CopyrightInfo
 {
-    using System.Globalization;
-    using System.Text;
+    private readonly bool isSymbolUpper;
+    private readonly int[] years;
+    private readonly string author;
+    private static readonly string defaultCopyrightWord = "Copyright";
+    private static readonly string symbolLower = "(c)";
+    private static readonly string symbolUpper = "(C)";
+    private StringBuilder builder;
 
     /// <summary>
-    /// Models the copyright informations part of an help text.
-    /// You can assign it where you assign any <see cref="System.String"/> instance.
+    /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class.
     /// </summary>
-    public class CopyrightInfo
+    protected CopyrightInfo()
     {
-        private readonly bool isSymbolUpper;
-        private readonly int[] years;
-        private readonly string author;
-        private static readonly string defaultCopyrightWord = "Copyright";
-        private static readonly string symbolLower = "(c)";
-        private static readonly string symbolUpper = "(C)";
-        private StringBuilder builder;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class.
-        /// </summary>
-        protected CopyrightInfo()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class
+    /// specifying author and year.
+    /// </summary>
+    /// <param name="author">The company or person holding the copyright.</param>
+    /// <param name="year">The year of coverage of copyright.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="author"/> is null or empty string.</exception>
+    public CopyrightInfo(string author, int year)
+        : this(true, author, year)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class
+    /// specifying author and years.
+    /// </summary>
+    /// <param name="author">The company or person holding the copyright.</param>
+    /// <param name="years">The years of coverage of copyright.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="author"/> is null or empty string.</exception>
+    /// <exception cref="System.ArgumentOutOfRangeException">Thrown when parameter <paramref name="years"/> is not supplied.</exception>
+    public CopyrightInfo(string author, params int[] years)
+        : this(true, author, years)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class
+    /// specifying symbol case, author and years.
+    /// </summary>
+    /// <param name="isSymbolUpper">The case of the copyright symbol.</param>
+    /// <param name="author">The company or person holding the copyright.</param>
+    /// <param name="years">The years of coverage of copyright.</param>
+    /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="author"/> is null or empty string.</exception>
+    /// <exception cref="System.ArgumentOutOfRangeException">Thrown when parameter <paramref name="years"/> is not supplied.</exception>
+    public CopyrightInfo(bool isSymbolUpper, string author, params int[] years)
+    {
+        Validator.CheckIsNullOrEmpty(author, "author");
+        Validator.CheckZeroLength(years, "years");
+
+        const int extraLength = 10;
+        this.isSymbolUpper = isSymbolUpper; //this.symbol = symbol;
+        this.author = author;
+        this.years = years;
+        builder = new StringBuilder
+            (CopyrightWord.Length + author.Length + 4 * years.Length + extraLength);
+    }
+
+    /// <summary>
+    /// Returns the copyright informations as a <see cref="System.String"/>.
+    /// </summary>
+    /// <returns>The <see cref="System.String"/> that contains the copyright informations.</returns>
+    public override string ToString()
+    {
+        builder.Append(CopyrightWord);
+        builder.Append(' ');
+        if (isSymbolUpper)
         {
+            builder.Append(symbolUpper);
+        }
+        else
+        {
+            builder.Append(symbolLower);
+        }
+        builder.Append(' ');
+        builder.Append(FormatYears(years));
+        builder.Append(' ');
+        builder.Append(author);
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Converts the copyright informations to a <see cref="System.String"/>.
+    /// </summary>
+    /// <param name="info">This <see cref="CommandLine.Text.CopyrightInfo"/> instance.</param>
+    /// <returns>The <see cref="System.String"/> that contains the copyright informations.</returns>
+    public static implicit operator string(CopyrightInfo info)
+    {
+        return info.ToString();
+    }
+
+    /// <summary>
+    /// When overridden in a derived class, allows to specify a different copyright word.
+    /// </summary>
+    protected virtual string CopyrightWord
+    {
+        get { return defaultCopyrightWord; }
+    }
+
+    /// <summary>
+    /// When overridden in a derived class, allows to specify a new algorithm to render copyright years
+    /// as a <see cref="System.String"/> instance.
+    /// </summary>
+    /// <param name="years">A <see cref="System.Int32"/> array of years.</param>
+    /// <returns>A <see cref="System.String"/> instance with copyright years.</returns>
+    protected virtual string FormatYears(int[] years)
+    {
+        if (years.Length == 1)
+        {
+            return years[0].ToString(CultureInfo.InvariantCulture);
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class
-        /// specifying author and year.
-        /// </summary>
-        /// <param name="author">The company or person holding the copyright.</param>
-        /// <param name="year">The year of coverage of copyright.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="author"/> is null or empty string.</exception>
-        public CopyrightInfo(string author, int year)
-            : this(true, author, new int[] { year })
+        StringBuilder yearsPart = new(years.Length * 6);
+        for (int i = 0; i < years.Length; i++)
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class
-        /// specifying author and years.
-        /// </summary>
-        /// <param name="author">The company or person holding the copyright.</param>
-        /// <param name="years">The years of coverage of copyright.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="author"/> is null or empty string.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">Thrown when parameter <paramref name="years"/> is not supplied.</exception>
-        public CopyrightInfo(string author, params int[] years)
-            : this(true, author, years)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandLine.Text.CopyrightInfo"/> class
-        /// specifying symbol case, author and years.
-        /// </summary>
-        /// <param name="isSymbolUpper">The case of the copyright symbol.</param>
-        /// <param name="author">The company or person holding the copyright.</param>
-        /// <param name="years">The years of coverage of copyright.</param>
-        /// <exception cref="System.ArgumentException">Thrown when parameter <paramref name="author"/> is null or empty string.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">Thrown when parameter <paramref name="years"/> is not supplied.</exception>
-        public CopyrightInfo(bool isSymbolUpper, string author, params int[] years)
-        {
-            Validator.CheckIsNullOrEmpty(author, "author");
-            Validator.CheckZeroLength(years, "years");
-
-            const int extraLength = 10;
-            this.isSymbolUpper = isSymbolUpper; //this.symbol = symbol;
-            this.author = author;
-            this.years = years;
-            builder = new StringBuilder
-                    (CopyrightWord.Length + author.Length + 4 * years.Length + extraLength);
-        }
-
-        /// <summary>
-        /// Returns the copyright informations as a <see cref="System.String"/>.
-        /// </summary>
-        /// <returns>The <see cref="System.String"/> that contains the copyright informations.</returns>
-        public override string ToString()
-        {
-            builder.Append(CopyrightWord);
-            builder.Append(' ');
-            if (isSymbolUpper)
+            yearsPart.Append(years[i].ToString(CultureInfo.InvariantCulture));
+            int next = i + 1;
+            if (next < years.Length)
             {
-                builder.Append(symbolUpper);
-            }
-            else
-            {
-                builder.Append(symbolLower);
-            }
-            builder.Append(' ');
-            builder.Append(FormatYears(years));
-            builder.Append(' ');
-            builder.Append(author);
-            return builder.ToString();
-        }
-
-        /// <summary>
-        /// Converts the copyright informations to a <see cref="System.String"/>.
-        /// </summary>
-        /// <param name="info">This <see cref="CommandLine.Text.CopyrightInfo"/> instance.</param>
-        /// <returns>The <see cref="System.String"/> that contains the copyright informations.</returns>
-        public static implicit operator string(CopyrightInfo info)
-        {
-            return info.ToString();
-        }
-
-        /// <summary>
-        /// When overridden in a derived class, allows to specify a different copyright word.
-        /// </summary>
-        protected virtual string CopyrightWord
-        {
-            get { return defaultCopyrightWord; }
-        }
-
-        /// <summary>
-        /// When overridden in a derived class, allows to specify a new algorithm to render copyright years
-        /// as a <see cref="System.String"/> instance.
-        /// </summary>
-        /// <param name="years">A <see cref="System.Int32"/> array of years.</param>
-        /// <returns>A <see cref="System.String"/> instance with copyright years.</returns>
-        protected virtual string FormatYears(int[] years)
-        {
-            if (years.Length == 1)
-            {
-                return years[0].ToString(CultureInfo.InvariantCulture);
-            }
-
-            StringBuilder yearsPart = new(years.Length * 6);
-            for (int i = 0; i < years.Length; i++)
-            {
-                yearsPart.Append(years[i].ToString(CultureInfo.InvariantCulture));
-                int next = i + 1;
-                if (next < years.Length)
+                if (years[next] - years[i] > 1)
                 {
-                    if (years[next] - years[i] > 1)
-                    {
-                        yearsPart.Append(" - ");
-                    }
-                    else
-                    {
-                        yearsPart.Append(", ");
-                    }
+                    yearsPart.Append(" - ");
+                }
+                else
+                {
+                    yearsPart.Append(", ");
                 }
             }
-            return yearsPart.ToString();
         }
+        return yearsPart.ToString();
     }
 }

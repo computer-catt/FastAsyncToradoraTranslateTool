@@ -26,15 +26,14 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
-{
-    using System;
+using System;
 
-    [Flags]
-    enum ParserState : ushort
-    {
-        Success             = 0x01,
-        Failure             = 0x02,
-        MoveOnNextElement   = 0x04
-    }
+namespace CommandLine;
+
+[Flags]
+enum ParserState : ushort
+{
+    Success             = 0x01,
+    Failure             = 0x02,
+    MoveOnNextElement   = 0x04
 }

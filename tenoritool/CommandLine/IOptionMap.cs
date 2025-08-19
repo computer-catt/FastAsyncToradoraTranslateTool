@@ -26,12 +26,11 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
-{
-    interface IOptionMap
-    {
-        OptionInfo this[string key] { get; set; }
+namespace CommandLine;
 
-        bool EnforceRules();
-    }
+interface IOptionMap
+{
+    OptionInfo this[string key] { get; set; }
+
+    bool EnforceRules();
 }

@@ -26,90 +26,89 @@
 // THE SOFTWARE.
 #endregion
 
-namespace CommandLine
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace CommandLine;
+
+static class ReflectionUtil
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Reflection;
-
-    static class ReflectionUtil
+    public static IList<Pair<FieldInfo, TAttribute>> RetrieveFieldList<TAttribute>(object target)
+        where TAttribute : Attribute
     {
-        public static IList<Pair<FieldInfo, TAttribute>> RetrieveFieldList<TAttribute>(object target)
-                where TAttribute : Attribute
+        IList<Pair<FieldInfo, TAttribute>> list = new List<Pair<FieldInfo, TAttribute>>();
+        FieldInfo[] info = target.GetType().GetFields();
+        foreach (FieldInfo field in info)
         {
-            IList<Pair<FieldInfo, TAttribute>> list = new List<Pair<FieldInfo, TAttribute>>();
-            FieldInfo[] info = target.GetType().GetFields();
-            foreach (FieldInfo field in info)
+            if (!field.IsStatic && !field.IsInitOnly && !field.IsLiteral)
             {
-                if (!field.IsStatic && !field.IsInitOnly && !field.IsLiteral)
+                Attribute attribute =
+                    Attribute.GetCustomAttribute(field, typeof(TAttribute), false);
+                if (attribute != null)
                 {
-                    Attribute attribute =
-                        Attribute.GetCustomAttribute(field, typeof(TAttribute), false);
-                    if (attribute != null)
-                    {
-                        list.Add(new Pair<FieldInfo, TAttribute>(field, (TAttribute)attribute));
-                    }
+                    list.Add(new Pair<FieldInfo, TAttribute>(field, (TAttribute)attribute));
                 }
             }
-            return list;
         }
+        return list;
+    }
 
-        public static Pair<MethodInfo, TAttribute> RetrieveMethod<TAttribute>(object target)
-                where TAttribute : Attribute
+    public static Pair<MethodInfo, TAttribute> RetrieveMethod<TAttribute>(object target)
+        where TAttribute : Attribute
+    {
+        MethodInfo[] info = target.GetType().GetMethods();
+        foreach (MethodInfo method in info)
         {
-            MethodInfo[] info = target.GetType().GetMethods();
-            foreach (MethodInfo method in info)
+            if (!method.IsStatic)
             {
-                if (!method.IsStatic)
+                Attribute attribute =
+                    Attribute.GetCustomAttribute(method, typeof(TAttribute), false);
+                if (attribute != null)
                 {
-                    Attribute attribute =
-                                                Attribute.GetCustomAttribute(method, typeof(TAttribute), false);
-                    if (attribute != null)
-                    {
-                        return new Pair<MethodInfo, TAttribute>(method, (TAttribute)attribute);
-                    }
+                    return new Pair<MethodInfo, TAttribute>(method, (TAttribute)attribute);
                 }
             }
-            return null;
         }
+        return null;
+    }
 
-        public static TAttribute RetrieveMethodAttributeOnly<TAttribute>(object target)
-                where TAttribute : Attribute
+    public static TAttribute RetrieveMethodAttributeOnly<TAttribute>(object target)
+        where TAttribute : Attribute
+    {
+        MethodInfo[] info = target.GetType().GetMethods();
+        foreach (MethodInfo method in info)
         {
-            MethodInfo[] info = target.GetType().GetMethods();
-            foreach (MethodInfo method in info)
+            if (!method.IsStatic)
             {
-                if (!method.IsStatic)
+                Attribute attribute =
+                    Attribute.GetCustomAttribute(method, typeof(TAttribute), false);
+                if (attribute != null)
                 {
-                    Attribute attribute =
-                        Attribute.GetCustomAttribute(method, typeof(TAttribute), false);
-                    if (attribute != null)
-                    {
-                        return (TAttribute)attribute;
-                    }
+                    return (TAttribute)attribute;
                 }
             }
-            return null;
         }
+        return null;
+    }
 
-        public static IList<TAttribute> RetrieveFieldAttributeList<TAttribute>(object target)
-                where TAttribute : Attribute
+    public static IList<TAttribute> RetrieveFieldAttributeList<TAttribute>(object target)
+        where TAttribute : Attribute
+    {
+        IList<TAttribute> list = new List<TAttribute>();
+        FieldInfo[] info = target.GetType().GetFields();
+        foreach (FieldInfo field in info)
         {
-            IList<TAttribute> list = new List<TAttribute>();
-            FieldInfo[] info = target.GetType().GetFields();
-            foreach (FieldInfo field in info)
+            if (!field.IsStatic && !field.IsInitOnly && !field.IsLiteral)
             {
-                if (!field.IsStatic && !field.IsInitOnly && !field.IsLiteral)
+                Attribute attribute =
+                    Attribute.GetCustomAttribute(field, typeof(TAttribute), false);
+                if (attribute != null)
                 {
-                    Attribute attribute =
-                        Attribute.GetCustomAttribute(field, typeof(TAttribute), false);
-                    if (attribute != null)
-                    {
-                        list.Add((TAttribute)attribute);
-                    }
+                    list.Add((TAttribute)attribute);
                 }
             }
-            return list;
         }
+        return list;
     }
 }
