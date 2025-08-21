@@ -50,6 +50,7 @@ internal static partial class TenoriTool {
     private static void Main(string[] args) {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Options options = new();
+        
         ICommandLineParser parser = new CommandLineParser();
         if (!parser.ParseArguments(args, options, Console.Error)) {
             Environment.Exit(ExitFailure);
@@ -91,12 +92,7 @@ internal static partial class TenoriTool {
             string displayFilename;
 
             bool isStdInput = inpath.Equals("-", StringComparison.InvariantCulture);
-            if (isStdInput) {
-                displayFilename = "<STDIN>";
-            }
-            else {
-                displayFilename = Path.GetFileName(inpath);
-            }
+            displayFilename = isStdInput ? "<STDIN>" : Path.GetFileName(inpath);
 
             if (options.Verbose) {
                 Console.ForegroundColor = ConsoleColor.White;
@@ -104,42 +100,43 @@ internal static partial class TenoriTool {
                 Console.ResetColor();
             }
 
-            if (!isStdInput) {
-                string ioerror = string.Empty;
-                try {
-                    FileAttributes attributes = File.GetAttributes(inpath);
-                    FileInfo infile = new(inpath);
-                    if ((attributes & FileAttributes.Directory) == FileAttributes.Directory || !infile.Exists) {
-                        ioerror = "does not exist or is a directory";
-                    }
-                    else {
-                        if (options.Verbose)
-                            await Console.Error.WriteLineAsync($"    Reported size: {infile.Length}");
+            if (isStdInput) continue;
+            
+            string ioerror = string.Empty;
+            try {
+                FileAttributes attributes = File.GetAttributes(inpath);
+                FileInfo infile = new(inpath);
+                if ((attributes & FileAttributes.Directory) == FileAttributes.Directory || !infile.Exists) {
+                    ioerror = "does not exist or is a directory";
+                }
+                else {
+                    if (options.Verbose)
+                        await Console.Error.WriteLineAsync($"    Reported size: {infile.Length}");
 
-                        TenoriToolApi.ProcessReturn processReturn;
-                        if (!(processReturn = await TenoriToolApi.ProcessIndividualExtract(options.ListPath, options.OutputDirectory, options.Use32Mode, options.Verbose, HighlightColor ,"", inpath, options.ExtractStub)).Success)
-                            ioerror = processReturn.Error;
-                    }
+                    TenoriToolApi.TenoriCallbacks callbacks = TenoriToolApi.TenoriCallbacks.Default(highlightColor: HighlightColor);
+                    TenoriToolApi.ProcessReturn processReturn;
+                    if (!(processReturn = await TenoriToolApi.ProcessIndividualExtract(options.ListPath, options.OutputDirectory, options.Use32Mode, options.Verbose,"", inpath, callbacks, options.ExtractStub)).Success)
+                        ioerror = processReturn.Error;
                 }
-                catch (IOException ex) {
-                    ioerror = ex.Message;
-                }
-                catch (UnauthorizedAccessException ex) {
-                    ioerror = ex.Message;
-                }
-                catch (Exception ex) {
-                    ReportError($"{inpath}: unexpected exception occured ({ex.Message})");
-                    throw;
-                }
-
-                if (ioerror.Length <= 0) continue;
-                ReportError($"cannot open {inpath}: {ioerror}");
-                hasError = true;
             }
+            catch (IOException ex) {
+                ioerror = ex.Message;
+            }
+            catch (UnauthorizedAccessException ex) {
+                ioerror = ex.Message;
+            }
+            catch (Exception ex) {
+                ReportError($"{inpath}: unexpected exception occured ({ex.Message})");
+                throw;
+            }
+
+            if (ioerror.Length <= 0) continue;
+            ReportError($"cannot open {inpath}: {ioerror}");
+            hasError = true;
         }
 
         return !hasError;
     }
 
-    static Task<bool> DummyExtractEntry(string outputDirectory, bool verbose, ConsoleColor highlightColor, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo, TextWriter output = null) => Task.FromResult(true);
+    private static Task<string> DummyExtractEntry(string outputDirectory, bool verbose, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo, Action<string> processingFilepath, Action<string> processedFilepath) => Task.FromResult("");
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using tenoriTool;
 
@@ -24,7 +23,6 @@ public class DatWorker(string workingDir) {
             }
             
             // unpack
-            ResetWorkspace(workingDir);
             await OpenDat(arg);
             lstOrder.Reverse();
             File.WriteAllLines(arg + "-LstOrder.lst", lstOrder.ToArray());
@@ -32,31 +30,18 @@ public class DatWorker(string workingDir) {
         //Console.ReadLine();
     }
 
-    private static void ResetWorkspace(string workingDir) {
-        Console.WriteLine("Starting...");
-        string[] files = Directory.GetFiles(Path.Combine(workingDir, ".\\Workspace"), "*.dat", SearchOption.TopDirectoryOnly);
-        foreach (string dat in files) {
-            if (File.Exists(Path.Combine(workingDir, ".\\", Path.GetFileName(dat))))
-                File.Delete(dat);
-            else
-                File.Move(dat, Path.Combine(workingDir, ".\\", Path.GetFileName(dat)));
-        }
-    }
-
     private List<string> lstOrder = [];
-
+    
     #region EXTRACT
 
     private async Task<bool> OpenDat(string dat) {
         try {
-            Console.WriteLine("Extracting: {0}", dat);
+            _ = Console.Out.WriteLineAsync($"Extracting: {dat}"); // dont wait for me guys
             string[] files = await ExtractDatContent(dat);
             List<Task> taskList = [];
-            foreach (string file in files) {
-                if (Path.GetExtension(file).ToLower().Trim(' ', '.') == "dat") {
+            foreach (string file in files)
+                if (Path.GetExtension(file).ToLower().Trim(' ', '.') == "dat")
                     taskList.Add(OpenDat(file));
-                }
-            }
 
             await Task.WhenAll(taskList);
             return true;
@@ -73,41 +58,11 @@ public class DatWorker(string workingDir) {
         if (newDir.StartsWith("\\"))
             newDir = "." + newDir;
 
-        
-        List<string> flist = [];
-        string isPadded = "N";
-        TenoriToolApi.EventTextWriter meow = new();
-        meow.TextWritten += s => {
-            if (s == null)
-                return;
-
-            string line = s.Trim();
-
-            if (line.StartsWith("Is padded with space: ")) {
-                isPadded = line.Replace("Is padded with space: ", "").Substring(0, 1);
-            }
-
-            if (!line.StartsWith("^")) {
-                if (!line.Contains("#") || !line.Contains("@")) {
-                    return;
-                }
-
-                string dfn = GetDatFn(line.Split('#')[1].Split('@')[0].Trim('\t', ' ', ','));
-                flist.Add(dfn);
-                //Console.Title = "Processing: " + DFN; // TODO
-                return;
-            }
-
-            flist[^1] = ".\\" + line.Trim('^', ' ', '\t') + '\t' + flist.Last();
-        };
-        
-        await TenoriToolApi.ProcessIndividualExtract("", newDir, false, true, ConsoleColor.Yellow, "", dat, output: meow);
+        TenoriToolApi.TenoriCallbacks callbacks = TenoriToolApi.TenoriCallbacks.None();
+        TenoriToolApi.ProcessReturn processReturn = await TenoriToolApi.ProcessIndividualExtract("", newDir, false, true, "", dat, callbacks);
         bool directoryExist = Directory.Exists(newDir);
         if (!directoryExist) return [];
-
-        string txt = isPadded;
-        foreach (string file in flist.ToArray())
-            txt += "\r\n" + file;
+        string txt = processReturn.MakeGpdaFileContent;
 
         string lst = GetDatLfn(dat);
         if (lst.StartsWith("\\"))
@@ -121,26 +76,7 @@ public class DatWorker(string workingDir) {
         return Directory.GetFiles(newDir, "*", SearchOption.AllDirectories);
     }
 
-    private string GetDatFn(string file) {
-        string[] splits = Path.GetFileName(file).Split('.');
-        
-        // if the file has less than 3 dots or cannot be properly parsed
-        if (splits.Length < 3 || !int.TryParse(splits[splits.Length - 2], out int _)) return Path.GetFileName(file);
-        
-        string fn = string.Empty;
-        foreach (string section in splits) {
-            if (int.TryParse(section, out int _) && section.StartsWith("0"))
-                continue;
-            fn += section + ".";
-        }
-
-        return fn.TrimEnd('.');
-
-    }
-
-    private string GetDatLfn(string file) {
-        return Path.GetDirectoryName(file) + "\\" + Path.GetFileNameWithoutExtension(file) + ".lst";
-    }
+    private string GetDatLfn(string file) => Path.GetDirectoryName(file) + "\\" + Path.GetFileNameWithoutExtension(file) + ".lst";
 
     #endregion
 
@@ -170,7 +106,7 @@ public class DatWorker(string workingDir) {
 
             Process proc = new() {
                 StartInfo = new ProcessStartInfo {
-                    FileName = Path.Combine(workingDir, "Workspace\\makeGDP.exe"),
+                    FileName = Path.Combine(workingDir, "makeGDP.exe"),
                     Arguments = "\"" + datDir + Path.GetFileNameWithoutExtension(dat) + "\"",
                     WorkingDirectory = datDir,
                     UseShellExecute = true,

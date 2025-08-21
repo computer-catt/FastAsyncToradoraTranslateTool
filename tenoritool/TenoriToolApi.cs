@@ -11,6 +11,9 @@ public static class TenoriToolApi {
     public class ProcessReturn {
         public string Error = "";
         public bool Success = true;
+        public readonly List<string> FileNames = [];
+        public bool SpacePadded;
+        public string MakeGpdaFileContent;
     }
     
     public class EventTextWriter : TextWriter
@@ -21,18 +24,56 @@ public static class TenoriToolApi {
         public override void WriteLine(string value) => TextWritten?.Invoke(value + Environment.NewLine);
     }
     
+    public class TenoriCallbacks {
+        public Action<ulong> ArchiveSize;
+        public Action<uint> Entries;
+        public Action<bool> PaddedWithSpace;
+        public Action<string> FormatMask;
+        public Action<(int index, ArchiveEntryInfo entry)> EntriesInfo;
+        public Action<string> ProcessingFilepathCallback;
+        public Action<string> ProcessedFilepathCallback;
+
+        public static TenoriCallbacks None() {
+            return new TenoriCallbacks {
+                ArchiveSize = _ => { },
+                Entries = _ => { },
+                EntriesInfo = _ => { },
+                FormatMask = _ => { },
+                PaddedWithSpace = _ => { },
+                ProcessedFilepathCallback = _ => { },
+                ProcessingFilepathCallback = _ => { }
+            };
+        }
+
+        public static TenoriCallbacks Default(TextWriter output = null, ConsoleColor highlightColor = ConsoleColor.Yellow) {
+            output ??= Console.Error;
+            return new TenoriCallbacks{
+                ArchiveSize = size => _ = output.WriteLineAsync(string.Format(new FileSizeFormatProvider(), "    Declared size: {0} ({0:fs})", size)),
+                Entries = entries => _ = output.WriteLineAsync(string.Format(new FileSizeFormatProvider(), "    Entries: {0}", entries)),
+                PaddedWithSpace = padded => _ = output.WriteLineAsync(string.Format(new FileSizeFormatProvider(), "    Is padded with space: {0}", padded ? "Yes" : "No")),
+                FormatMask = formatMask => _ = output.WriteLineAsync($"    Format Mask: {formatMask}"),
+                EntriesInfo = args => _ = output.WriteLineAsync($" {args.index + 1,4} # {args.entry}"),
+                ProcessingFilepathCallback = path => {
+                    Console.ForegroundColor = highlightColor;
+                    _ = output.WriteLineAsync($"    ^ {path}");
+                    Console.ResetColor();
+                },
+                ProcessedFilepathCallback = _ => {}
+            };
+        }
+    }
+    
     private const uint TenoriEntrySize = 0x10;
     private static readonly uint TenoriSigConst = BinaryIO.ReadUInt32("GPDA"u8.ToArray()); // "GPDA", Guyzware Packed Data Archive
     
-    public delegate Task<bool> ExtractDelegate(string outputDirectory, bool verbose, ConsoleColor highlightColor, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo, TextWriter output = null);
+    public delegate Task<string> ExtractDelegate(string outputDirectory, bool verbose, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo, Action<string> processingFilepath, Action<string> processedFilepath);
 
-    public static async Task<ProcessReturn> ProcessIndividualExtract(string listPath, string outputDirectory, bool use32Mode, bool verbose, ConsoleColor highlightColor, string baseSubdirectory, string path, ExtractDelegate extract = null, TextWriter output = null ) {
+    public static async Task<ProcessReturn> ProcessIndividualExtract(string listPath, string outputDirectory, bool use32Mode, bool verbose, string baseSubdirectory, string path, TenoriCallbacks output = null, ExtractDelegate extract = null) {
         extract ??= ExtractEntry;
-        output ??= Console.Error;
+        output ??= TenoriCallbacks.None();
         
         ProcessReturn processReturn = new(); 
-        List<string> filenames = [];
-
+        
         // Only try catching when reading is not possible (not enough input/space)
         using BinaryReader reader = new(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Encoding.Default);
         
@@ -45,19 +86,20 @@ public static class TenoriToolApi {
         }
 
         ArchiveInfo arcinfo = new() {
-            ArchiveSize = use32Mode ? BinaryIO.ReadUInt32(header, 0x04) : BinaryIO.ReadUInt64(header, 0x04)
+            ArchiveSize = use32Mode ? BinaryIO.ReadUInt32(header, 0x04) : BinaryIO.ReadUInt64(header, 0x04),
+            EntriesCount = BinaryIO.ReadUInt32(header, 0x0C)
         };
 
-        if (verbose)
-            _ = output.WriteLineAsync(string.Format(new FileSizeFormatProvider(), "    Declared size: {0} ({0:fs})", arcinfo.ArchiveSize));
+        if (verbose) output.ArchiveSize(arcinfo.ArchiveSize);
+        if (verbose) output.Entries(arcinfo.EntriesCount);
 
-        arcinfo.EntriesCount = BinaryIO.ReadUInt32(header, 0x0C);
-        if (verbose)
-            _ = output.WriteLineAsync(string.Format(new FileSizeFormatProvider(), "    Entries: {0}", arcinfo.EntriesCount));
+        if (arcinfo.EntriesCount <= 0) {
+            processReturn.Error = $"No entries in Gpda";
+            processReturn.Success = false;
+            return processReturn;
+        }
 
-        if (arcinfo.EntriesCount <= 0) return processReturn;
-
-        byte[] entriesinfobytes = reader.ReadBytes(Convert.ToInt32(TenoriEntrySize * arcinfo.EntriesCount));
+        byte[] entriesInfoBytes = reader.ReadBytes(Convert.ToInt32(TenoriEntrySize * arcinfo.EntriesCount));
 
         //UInt32 headerPartialSize = 0x10 + TenoriEntrySize * arcinfo.EntriesCount;
 
@@ -65,67 +107,72 @@ public static class TenoriToolApi {
         // They are archives with several entries of the same name
         // In this case, generate a name of the form orgfile.####.ext.
 
-        Dictionary<string, int> usedfilenames = new();
-        List<ArchiveEntryInfo> entriesinfo = new();
+        Dictionary<string, int> usedFileNames = new();
+        List<ArchiveEntryInfo> entriesInfo = [];
 
         // TODO: should normally check if input is seekable beforehand
         // When reading from a pipe, this wouldn't be possible
 
         for (int i = 0; i < arcinfo.EntriesCount; ++i) {
-            ArchiveEntryInfo einfo = new() {
+            ArchiveEntryInfo entryinfo = new() {
                 EntryOffset = use32Mode ? 
-                    BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x00)) : 
-                    BinaryIO.ReadUInt64(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x00)),
-                EntrySize = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x08)),
-                EntryNameOffset = BinaryIO.ReadUInt32(entriesinfobytes, Convert.ToInt32(i * TenoriEntrySize + 0x0C))
+                    BinaryIO.ReadUInt32(entriesInfoBytes, Convert.ToInt32(i * TenoriEntrySize + 0x00)) : 
+                    BinaryIO.ReadUInt64(entriesInfoBytes, Convert.ToInt32(i * TenoriEntrySize + 0x00)),
+                EntrySize = BinaryIO.ReadUInt32(entriesInfoBytes, Convert.ToInt32(i * TenoriEntrySize + 0x08)),
+                EntryNameOffset = BinaryIO.ReadUInt32(entriesInfoBytes, Convert.ToInt32(i * TenoriEntrySize + 0x0C))
             };
 
-            reader.BaseStream.Seek(einfo.EntryNameOffset, SeekOrigin.Begin);
+            reader.BaseStream.Seek(entryinfo.EntryNameOffset, SeekOrigin.Begin);
 
             uint len = reader.ReadUInt32();
-            byte[] strbytes = reader.ReadBytes(Convert.ToInt32(len));
-            einfo.EntryName = Encoding.GetEncoding(932).GetString(strbytes);
-            if (!usedfilenames.TryAdd(einfo.EntryName, 1))
-                usedfilenames[einfo.EntryName]++;
+            byte[] stringBytes = reader.ReadBytes(Convert.ToInt32(len));
+            entryinfo.EntryName = Encoding.GetEncoding(932).GetString(stringBytes);
+            if (!usedFileNames.TryAdd(entryinfo.EntryName, 1))
+                usedFileNames[entryinfo.EntryName]++;
 
-            entriesinfo.Add(einfo);
+            entriesInfo.Add(entryinfo);
         }
 
-        if (verbose)
-            _ = output.WriteLineAsync(string.Format(new FileSizeFormatProvider(), "    Is padded with space: {0}", entriesinfo[0].EntryName.EndsWith(" ") ? "Yes" : "No"));
-
+        bool spacePadded = processReturn.SpacePadded = entriesInfo[0].EntryName.EndsWith(' ');
+        if (verbose) output.PaddedWithSpace(spacePadded);
+        StringBuilder makeGpdaFileContent = new();
+        makeGpdaFileContent.Append(spacePadded ? "Y\n" : "N\n");
+        
+        
         bool genericEntries = false;
         string genericNameFormat = string.Empty;
         for (int i = 0; i < arcinfo.EntriesCount; ++i) {
-            if (usedfilenames[entriesinfo[i].EntryName] <= 1) continue;
+            if (usedFileNames[entriesInfo[i].EntryName] <= 1) continue;
             genericEntries = true;
             break;
         }
 
         if (genericEntries) {
             genericNameFormat = "{0}.{1:d4}.{2}";
-            if (verbose) 
-                _ = output.WriteLineAsync($"    Format Mask: {genericNameFormat}");
+            if (verbose) output.FormatMask(genericNameFormat);
         }
 
 
         for (int i = 0; i < arcinfo.EntriesCount; ++i) {
-            if (usedfilenames[entriesinfo[i].EntryName] > 1) {
-                string fileName = Path.GetFileNameWithoutExtension(entriesinfo[i].EntryName);
-                string fileExtension = Path.GetExtension(entriesinfo[i].EntryName).TrimStart('.');
-                entriesinfo[i].EntryName = string.Format(genericNameFormat, fileName, i + 1, fileExtension);
+            string originalName = entriesInfo[i].EntryName;
+            if (usedFileNames[entriesInfo[i].EntryName] > 1) {
+                string fileName = Path.GetFileNameWithoutExtension(entriesInfo[i].EntryName);
+                string fileExtension = Path.GetExtension(entriesInfo[i].EntryName).TrimStart('.');
+                entriesInfo[i].EntryName = string.Format(genericNameFormat, fileName, i + 1, fileExtension);
             }
 
-            arcinfo.Entries.Add(entriesinfo[i]);
+            arcinfo.Entries.Add(entriesInfo[i]);
             if (verbose)
-                _ = output.WriteLineAsync($" {i + 1,4} # {entriesinfo[i]}");
-
-            filenames.Add(entriesinfo[i].EntryName);
-            await extract(outputDirectory, verbose, highlightColor, baseSubdirectory, reader.BaseStream, entriesinfo[i], output);
+                output.EntriesInfo((i, entriesInfo[i]));
+            
+            processReturn.FileNames.Add(entriesInfo[i].EntryName);
+            string extractedPath = await extract(outputDirectory, verbose, baseSubdirectory, reader.BaseStream, entriesInfo[i], output.ProcessingFilepathCallback, output.ProcessedFilepathCallback);
+            makeGpdaFileContent.Append($"{extractedPath.Trim(' ')}\t{originalName}\n");
         }
-        
+
+        processReturn.MakeGpdaFileContent = makeGpdaFileContent.ToString();
         return processReturn;
-        TextWriter writer;
+        /*TextWriter writer;
 
         if (listPath != "-")
             writer = listPath.Length == 0 ? new StreamWriter(new MemoryStream()) : // silently discard
@@ -145,24 +192,17 @@ public static class TenoriToolApi {
             }
         }
 
-        return processReturn;
+        return processReturn;*/
     }
 
-    public static async Task<bool> ExtractEntry(string outputDirectory, bool verbose, ConsoleColor highlightColor, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo, TextWriter output = null) {
-        output ??= Console.Error;
-        
+    /// <returns>The path of the extracted file, or null</returns>
+    public static async Task<string> ExtractEntry(string outputDirectory, bool verbose, string baseSubdirectory, Stream inputStream, ArchiveEntryInfo entryinfo, Action<string> processingFilepath, Action<string> processedFilepath) {
         string target = Path.Combine(outputDirectory, baseSubdirectory);
-        if (!Directory.Exists(target)) {
-            Directory.CreateDirectory(target);
-        }
+        if (!Directory.Exists(target)) Directory.CreateDirectory(target);
 
         target = Path.Combine(outputDirectory, entryinfo.EntryName);
 
-        if (verbose) {
-            Console.ForegroundColor = highlightColor;
-            _ = output.WriteLineAsync($"    ^ {target}");
-            Console.ResetColor();
-        }
+        if (verbose) processingFilepath(target);
 
         inputStream.Seek(Convert.ToInt64(entryinfo.EntryOffset), SeekOrigin.Begin);
         int remainingBytes = Convert.ToInt32(entryinfo.EntrySize);
@@ -178,6 +218,8 @@ public static class TenoriToolApi {
             remainingBytes -= readSize;
         }
 
-        return true;
+        if (verbose) processedFilepath(target);
+        
+        return target;
     }
 }
