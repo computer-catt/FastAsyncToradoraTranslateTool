@@ -28,9 +28,9 @@ namespace ToradoraTranslateTool
             string isoPath = Path.Combine(Application.StartupPath, "Toradora.iso");
             string command = "-iso-level 4 -xa -A \"PSP GAME\" -V \"Toradora\" -sysid \"PSP GAME\" -volset \"Toradora\" -p \"\" -publisher \"\" -o \"" + isoPath + "\" \"" + isoDirectory + "\"";
             Process myProc = new();
-            myProc.StartInfo.FileName = Path.Combine(Application.StartupPath, "Data", "Mkisofs", "mkisofs.exe");
+            myProc.StartInfo.FileName = Path.Combine(Application.StartupPath, "Resources", "!!Tools", "Mkisofs", "mkisofs.exe");
             myProc.StartInfo.Arguments = command;
-            myProc.StartInfo.WorkingDirectory = Path.Combine(Application.StartupPath, "Data", "Mkisofs");
+            myProc.StartInfo.WorkingDirectory = Path.Combine(Application.StartupPath, "Resources", "!!Tools", "Mkisofs");
             myProc.Start();
 
             myProc.WaitForExit();

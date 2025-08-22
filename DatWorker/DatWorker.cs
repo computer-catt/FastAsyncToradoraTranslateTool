@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using tenoriTool;
 
 namespace DatWorker;
 
 public class DatWorker(string workingDir) {
+    private readonly JsonSerializerSettings settings = new() {
+        NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        //Formatting = Formatting.Indented
+    };
+    
     public async Task Process(string[] args) {
         if (args.Length == 0) {
-            Console.WriteLine("### Fast Async Datworker ####");
+            Console.WriteLine("### Fast Async Dat Worker ####");
             Console.WriteLine("Toradora DAT Automation Tool");
             Console.WriteLine("Drop Dat files");
             return;
@@ -18,33 +25,48 @@ public class DatWorker(string workingDir) {
 
         foreach (string arg in args) {
             if (arg.ToLower().EndsWith("-LstOrder.lst".ToLower())) { // Repack
-                await SaveDat(workingDir, await File.ReadAllLinesAsync(arg));
+                string lstOrder = await File.ReadAllTextAsync(arg);
+                DatTree repackDatTree = JsonConvert.DeserializeObject<DatTree>(lstOrder);
+                await SaveDat(workingDir, repackDatTree);
                 continue;
             }
             
             // unpack
-            await OpenDat(arg);
-            lstOrder.Reverse();
-            File.WriteAllLines(arg + "-LstOrder.lst", lstOrder.ToArray());
+            DatTree datTree = new(GetDatLstDir(arg));
+            await OpenDat(arg, datTree);
+            await File.WriteAllTextAsync(arg + "-LstOrder.lst", JsonConvert.SerializeObject(datTree, settings));
         }
         //Console.ReadLine();
     }
-
-    private List<string> lstOrder = [];
+    
+    public class DatTree(string name) {
+        [JsonProperty("n")] public string Name = name;
+        [JsonProperty("c")] public List<DatTree> Children = null;
+    }
+    
     
     #region EXTRACT
 
-    private async Task<bool> OpenDat(string dat) {
+    private async Task<DatTree> OpenDat(string dat, DatTree parent) {
         try {
-            _ = Console.Out.WriteLineAsync($"Extracting: {dat}"); // dont wait for me guys
-            string[] files = await ExtractDatContent(dat);
-            List<Task> taskList = [];
+            //_ = Console.Out.WriteLineAsync($"Extracting: {dat}"); // Don't wait for me guys
+            var files = await ExtractDatContent(dat);
+            if (files == null) return new DatTree(null);
+            List<Task<DatTree>> taskList = [];
             foreach (string file in files)
                 if (Path.GetExtension(file).ToLower().Trim(' ', '.') == "dat")
-                    taskList.Add(OpenDat(file));
+                    taskList.Add(OpenDat(file, new (GetDatLstDir(file))));
 
             await Task.WhenAll(taskList);
-            return true;
+
+            if (taskList.Count == 0) return parent;
+            
+            parent.Children ??= [];
+            foreach (Task<DatTree> task in taskList)
+                if (task.Result.Name != null) 
+                    parent.Children.Add(task.Result);
+            
+            return parent;
         }
         catch (Exception e) {
             Console.WriteLine(e.Message);
@@ -61,54 +83,52 @@ public class DatWorker(string workingDir) {
         TenoriToolApi.TenoriCallbacks callbacks = TenoriToolApi.TenoriCallbacks.None();
         TenoriToolApi.ProcessReturn processReturn = await TenoriToolApi.ProcessIndividualExtract("", newDir, false, true, "", dat, callbacks);
         bool directoryExist = Directory.Exists(newDir);
-        if (!directoryExist) return [];
+        if (!directoryExist) return null;
         string txt = processReturn.MakeGpdaFileContent;
 
-        string lst = GetDatLfn(dat);
-        if (lst.StartsWith("\\"))
+        string lst = GetDatLstDir(dat);
+        if (lst.StartsWith('\\'))
             lst = "." + lst;
 
         if (File.Exists(lst)) File.Delete(lst);
-
         await File.WriteAllTextAsync(lst, txt);
-        lstOrder.Add(lst);
 
         return Directory.GetFiles(newDir, "*", SearchOption.AllDirectories);
     }
 
-    private string GetDatLfn(string file) => Path.GetDirectoryName(file) + "\\" + Path.GetFileNameWithoutExtension(file) + ".lst";
+    private static string GetDatLstDir(string file) => Path.GetDirectoryName(file) + "\\" + Path.GetFileNameWithoutExtension(file) + ".lst";
 
     #endregion
 
     #region REPACK
-
-    private static async Task<bool> SaveDat(string workingDir, string[] files) {
-        foreach (string file in files) {
-            if (!File.Exists(file))
-                continue;
-
-            Console.WriteLine("Repacking: {0}", Path.GetFileName(file));
-            await RepackDat(workingDir, file);
+    private static async Task<bool> SaveDat(string workingDir, DatTree datTree) {
+        if (datTree.Children != null) {
+            List<Task> tasks = [];
+            foreach (DatTree tree in datTree.Children)
+                tasks.Add(SaveDat(workingDir, tree));
+            await Task.WhenAll(tasks);
         }
-
+        
+        if (!File.Exists(datTree.Name)) return false; 
+        _ = Console.Out.WriteLineAsync($"Repacking: {Path.GetFileName(datTree.Name)}"); // It's okay! il catch you guys later
+        await RepackDat(workingDir, datTree.Name);
         return true;
     }
 
-    private static async Task<bool> RepackDat(string workingDir, string dat) {
+    private static async Task<bool> RepackDat(string workingDir, string lst) {
         try {
-            string datDir = Path.GetDirectoryName(dat) + "\\";
-            if (datDir.StartsWith("\\"))
-                datDir = '.' + datDir;
+            string lstDir = Path.GetDirectoryName(lst) + "\\";
+            if (lstDir.StartsWith("\\"))
+                lstDir = '.' + lstDir;
 
-            if (datDir.StartsWith(".\\")) {
-                datDir = Path.Combine(workingDir, datDir.Substring(2, datDir.Length - 2));
-            }
-
+            if (lstDir.StartsWith(".\\"))
+                lstDir = Path.Combine(workingDir, lstDir.Substring(2, lstDir.Length - 2));
+            
             Process proc = new() {
                 StartInfo = new ProcessStartInfo {
                     FileName = Path.Combine(workingDir, "makeGDP.exe"),
-                    Arguments = "\"" + datDir + Path.GetFileNameWithoutExtension(dat) + "\"",
-                    WorkingDirectory = datDir,
+                    Arguments = "\"" + lstDir + Path.GetFileNameWithoutExtension(lst) + "\"",
+                    WorkingDirectory = lstDir,
                     UseShellExecute = true,
                     WindowStyle = ProcessWindowStyle.Hidden
                 }

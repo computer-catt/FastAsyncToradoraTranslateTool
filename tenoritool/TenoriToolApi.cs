@@ -72,7 +72,7 @@ public static class TenoriToolApi {
         extract ??= ExtractEntry;
         output ??= TenoriCallbacks.None();
         
-        ProcessReturn processReturn = new(); 
+        ProcessReturn processReturn = new();
         
         // Only try catching when reading is not possible (not enough input/space)
         using BinaryReader reader = new(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Encoding.Default);
@@ -136,7 +136,7 @@ public static class TenoriToolApi {
         bool spacePadded = processReturn.SpacePadded = entriesInfo[0].EntryName.EndsWith(' ');
         if (verbose) output.PaddedWithSpace(spacePadded);
         StringBuilder makeGpdaFileContent = new();
-        makeGpdaFileContent.Append(spacePadded ? "Y\n" : "N\n");
+        makeGpdaFileContent.Append(spacePadded ? "Y" : "N");
         
         
         bool genericEntries = false;
@@ -151,8 +151,8 @@ public static class TenoriToolApi {
             genericNameFormat = "{0}.{1:d4}.{2}";
             if (verbose) output.FormatMask(genericNameFormat);
         }
-
-
+        
+        string baseDir = Path.GetFileNameWithoutExtension(path);
         for (int i = 0; i < arcinfo.EntriesCount; ++i) {
             string originalName = entriesInfo[i].EntryName;
             if (usedFileNames[entriesInfo[i].EntryName] > 1) {
@@ -166,10 +166,18 @@ public static class TenoriToolApi {
                 output.EntriesInfo((i, entriesInfo[i]));
             
             processReturn.FileNames.Add(entriesInfo[i].EntryName);
-            string extractedPath = await extract(outputDirectory, verbose, baseSubdirectory, reader.BaseStream, entriesInfo[i], output.ProcessingFilepathCallback, output.ProcessedFilepathCallback);
-            makeGpdaFileContent.Append($"{extractedPath.Trim(' ')}\t{originalName}\n");
+            //string extractedPath = 
+            await extract(outputDirectory, verbose, baseSubdirectory, reader.BaseStream, entriesInfo[i], output.ProcessingFilepathCallback, output.ProcessedFilepathCallback);
+            //makeGpdaFileContent.Append($"{extractedPath.Trim(' ')}\t{originalName}\n");
+            makeGpdaFileContent.Append('\n');
+            makeGpdaFileContent.Append(".\\");
+            makeGpdaFileContent.Append(baseDir);
+            makeGpdaFileContent.Append('\\');
+            makeGpdaFileContent.Append(entriesInfo[i].EntryName);
+            makeGpdaFileContent.Append('\t');
+            makeGpdaFileContent.Append(originalName);
         }
-
+        
         processReturn.MakeGpdaFileContent = makeGpdaFileContent.ToString();
         return processReturn;
         /*TextWriter writer;

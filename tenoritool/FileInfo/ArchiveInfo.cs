@@ -30,42 +30,25 @@ using System.Collections.Generic;
 
 namespace tenoriTool;
 
-public class ArchiveInfo
-{
-    private ulong _ArchiveSize;
-    private uint _EntriesCount;
-    private List<ArchiveEntryInfo> _Entries;
-
-
-    public ulong ArchiveSize { get { return _ArchiveSize; } set { _ArchiveSize = value; } }
-    public uint EntriesCount { get { return _EntriesCount; } set { _EntriesCount = value; } }
-    public List<ArchiveEntryInfo> Entries { get { return _Entries; } set { _Entries = value; } }
-
-    public ArchiveInfo()
-    {
-        _Entries = new List<ArchiveEntryInfo>();
-    }
+public class ArchiveInfo {
+    public ulong ArchiveSize { get; set; }
+    public uint EntriesCount { get; set; }
+    public List<ArchiveEntryInfo> Entries { get; set; } = [];
 }
 
-public class ArchiveEntryInfo
-{
-    string _EntryName;
-    ulong _EntryOffset;
-    uint _EntrySize;
-    uint _EntryNameOffset;
+public class ArchiveEntryInfo {
+    public string EntryName { get; set; }
+    public ulong EntryOffset { get; set; }
+    public uint EntrySize { get; set; }
+    public uint EntryNameOffset { get; set; }
 
-    public string EntryName { get { return _EntryName; } set { _EntryName = value; } }
-    public ulong EntryOffset { get { return _EntryOffset; } set { _EntryOffset = value; } }
-    public uint EntrySize { get { return _EntrySize; } set { _EntrySize = value; } }
-    public uint EntryNameOffset { get { return _EntryNameOffset; } set { _EntryNameOffset = value; } }
     //
     // Summary:
     //     Returns a System.String that contains entry info.
     //
     // Returns:
     //     A System.String that contains entry info.
-    public override string ToString()
-    {
+    public override string ToString() {
         return string.Join(",", EntryName, "@" + EntryOffset.ToString("X8"), string.Format(new FileSizeFormatProvider(), "0x{0:X8} ({0:fs})", EntrySize));
     }
 }

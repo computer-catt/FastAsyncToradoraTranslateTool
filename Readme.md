@@ -4,8 +4,10 @@ Name inspired by the [FastAsyncWorldEdit](https://www.spigotmc.org/resources/fas
 
 ### Improvements upon the base project
 - Added a progress bar for iso extracting
-- Improved game file extraction by 1422%!
+- Improved game file extraction time by 1422%!
   - old time 396298 vs new time 26028
+- Improved game file repacking time by 167.37%
+  - old time 189438 vs new time 70853
 - Reworked file structure! Allows you to easily delete all generated resources
 
 ### Why?

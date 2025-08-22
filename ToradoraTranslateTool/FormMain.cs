@@ -152,7 +152,7 @@ public partial class FormMain : Form {
             await Task.Run(() => ObjTools.RepackObj(itemDebugMode.Checked));
             await Task.Run(ObjTools.RepackTxt);
             await Task.Run(() => DatTools.RepackDat(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource.dat-LstOrder.lst")));
-            await Task.Run(() => ObjTools.RepackSeekmap(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource.dat"), Path.Combine(Application.StartupPath, "Data", "DatWorker", "first")));
+            await Task.Run(() => ObjTools.RepackSeekmap(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource.dat"), Path.Combine(Application.StartupPath, "Data", "Extracted", "first")));
             await Task.Run(() => DatTools.RepackDat(Path.Combine(Application.StartupPath, "Data", "Extracted", "first.dat-LstOrder.lst")));
             await Task.Run(() => File.Copy(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource.dat"), Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "resource.dat"), true));
             await Task.Run(() => File.Copy(Path.Combine(Application.StartupPath, "Data", "Extracted", "first.dat"), Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "first.dat"), true));
@@ -167,6 +167,7 @@ public partial class FormMain : Form {
             EnableButtons();
             MessageBox.Show($"Error in {watch.ElapsedMilliseconds} ms!{Environment.NewLine}{ex}", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+        watch.Stop();
     }
 
     private async void buttonRepackIso_Click(object sender, EventArgs e) {
