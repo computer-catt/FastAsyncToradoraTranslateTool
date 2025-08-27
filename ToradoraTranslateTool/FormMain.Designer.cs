@@ -27,250 +27,331 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.components = new System.ComponentModel.Container();
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-            this.buttonExtractIso = new System.Windows.Forms.Button();
-            this.buttonExtractGame = new System.Windows.Forms.Button();
-            this.buttonTranslate = new System.Windows.Forms.Button();
-            this.buttonRepackGame = new System.Windows.Forms.Button();
-            this.contextMenuStripDebug = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.itemDebugMode = new System.Windows.Forms.ToolStripMenuItem();
-            this.buttonRepackIso = new System.Windows.Forms.Button();
-            this.buttonExtractIsoHelp = new System.Windows.Forms.Button();
-            this.buttonExtractGameHelp = new System.Windows.Forms.Button();
-            this.buttonRepackGameHelp = new System.Windows.Forms.Button();
-            this.buttonTranslateHelp = new System.Windows.Forms.Button();
-            this.buttonRepackIsoHelp = new System.Windows.Forms.Button();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.labelWork = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.IsoProgress = new System.Windows.Forms.ProgressBar();
-            this.timerWork = new System.Windows.Forms.Timer(this.components);
-            this.labelVersion = new System.Windows.Forms.Label();
-            this.contextMenuStripDebug.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.panel1.SuspendLayout();
-            this.SuspendLayout();
+            buttonExtractIso = new System.Windows.Forms.Button();
+            buttonExtractGame = new System.Windows.Forms.Button();
+            buttonTranslate = new System.Windows.Forms.Button();
+            buttonRepackGame = new System.Windows.Forms.Button();
+            contextMenuStripDebug = new System.Windows.Forms.ContextMenuStrip(components);
+            itemDebugMode = new System.Windows.Forms.ToolStripMenuItem();
+            buttonRepackIso = new System.Windows.Forms.Button();
+            buttonExtractIsoHelp = new System.Windows.Forms.Button();
+            buttonExtractGameHelp = new System.Windows.Forms.Button();
+            buttonRepackGameHelp = new System.Windows.Forms.Button();
+            buttonTranslateHelp = new System.Windows.Forms.Button();
+            buttonRepackIsoHelp = new System.Windows.Forms.Button();
+            pictureBox1 = new System.Windows.Forms.PictureBox();
+            labelWork = new System.Windows.Forms.Label();
+            panel1 = new System.Windows.Forms.Panel();
+            DeleteGenRes = new System.Windows.Forms.Button();
+            IsoProgress = new System.Windows.Forms.ProgressBar();
+            timerWork = new System.Windows.Forms.Timer(components);
+            labelVersion = new System.Windows.Forms.Label();
+            dragbar = new System.Windows.Forms.Button();
+            Exit = new System.Windows.Forms.Button();
+            contextMenuStripDebug.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            panel1.SuspendLayout();
+            SuspendLayout();
             // 
             // buttonExtractIso
             // 
-            this.buttonExtractIso.Location = new System.Drawing.Point(11, 43);
-            this.buttonExtractIso.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonExtractIso.Name = "buttonExtractIso";
-            this.buttonExtractIso.Size = new System.Drawing.Size(153, 39);
-            this.buttonExtractIso.TabIndex = 0;
-            this.buttonExtractIso.Text = "Extract ISO";
-            this.buttonExtractIso.UseVisualStyleBackColor = true;
-            this.buttonExtractIso.Click += new System.EventHandler(this.buttonExtractIso_Click);
+            buttonExtractIso.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonExtractIso.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonExtractIso.Location = new System.Drawing.Point(11, 54);
+            buttonExtractIso.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonExtractIso.Name = "buttonExtractIso";
+            buttonExtractIso.Size = new System.Drawing.Size(153, 49);
+            buttonExtractIso.TabIndex = 0;
+            buttonExtractIso.Text = "Extract ISO";
+            buttonExtractIso.UseVisualStyleBackColor = true;
+            buttonExtractIso.Click += buttonExtractIso_Click;
             // 
             // buttonExtractGame
             // 
-            this.buttonExtractGame.Enabled = false;
-            this.buttonExtractGame.Location = new System.Drawing.Point(11, 90);
-            this.buttonExtractGame.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonExtractGame.Name = "buttonExtractGame";
-            this.buttonExtractGame.Size = new System.Drawing.Size(153, 39);
-            this.buttonExtractGame.TabIndex = 1;
-            this.buttonExtractGame.Text = "Extract game files";
-            this.buttonExtractGame.UseVisualStyleBackColor = true;
-            this.buttonExtractGame.Click += new System.EventHandler(this.buttonExtractGame_Click);
+            buttonExtractGame.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonExtractGame.Enabled = false;
+            buttonExtractGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonExtractGame.Location = new System.Drawing.Point(11, 112);
+            buttonExtractGame.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonExtractGame.Name = "buttonExtractGame";
+            buttonExtractGame.Size = new System.Drawing.Size(153, 49);
+            buttonExtractGame.TabIndex = 1;
+            buttonExtractGame.Text = "Extract game files";
+            buttonExtractGame.UseVisualStyleBackColor = true;
+            buttonExtractGame.Click += buttonExtractGame_Click;
             // 
             // buttonTranslate
             // 
-            this.buttonTranslate.Enabled = false;
-            this.buttonTranslate.Location = new System.Drawing.Point(11, 137);
-            this.buttonTranslate.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonTranslate.Name = "buttonTranslate";
-            this.buttonTranslate.Size = new System.Drawing.Size(153, 39);
-            this.buttonTranslate.TabIndex = 2;
-            this.buttonTranslate.Text = "Translate strings";
-            this.buttonTranslate.UseVisualStyleBackColor = true;
-            this.buttonTranslate.Click += new System.EventHandler(this.buttonTranslate_Click);
+            buttonTranslate.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonTranslate.Enabled = false;
+            buttonTranslate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonTranslate.Location = new System.Drawing.Point(11, 171);
+            buttonTranslate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonTranslate.Name = "buttonTranslate";
+            buttonTranslate.Size = new System.Drawing.Size(153, 49);
+            buttonTranslate.TabIndex = 2;
+            buttonTranslate.Text = "Translate strings";
+            buttonTranslate.UseVisualStyleBackColor = true;
+            buttonTranslate.Click += buttonTranslate_Click;
             // 
             // buttonRepackGame
             // 
-            this.buttonRepackGame.ContextMenuStrip = this.contextMenuStripDebug;
-            this.buttonRepackGame.Enabled = false;
-            this.buttonRepackGame.Location = new System.Drawing.Point(11, 183);
-            this.buttonRepackGame.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonRepackGame.Name = "buttonRepackGame";
-            this.buttonRepackGame.Size = new System.Drawing.Size(153, 39);
-            this.buttonRepackGame.TabIndex = 3;
-            this.buttonRepackGame.Text = "Repack game files";
-            this.buttonRepackGame.UseVisualStyleBackColor = true;
-            this.buttonRepackGame.Click += new System.EventHandler(this.buttonRepackGame_Click);
+            buttonRepackGame.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonRepackGame.ContextMenuStrip = contextMenuStripDebug;
+            buttonRepackGame.Enabled = false;
+            buttonRepackGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonRepackGame.Location = new System.Drawing.Point(11, 229);
+            buttonRepackGame.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonRepackGame.Name = "buttonRepackGame";
+            buttonRepackGame.Size = new System.Drawing.Size(153, 49);
+            buttonRepackGame.TabIndex = 3;
+            buttonRepackGame.Text = "Repack game files";
+            buttonRepackGame.UseVisualStyleBackColor = true;
+            buttonRepackGame.Click += buttonRepackGame_Click;
             // 
             // contextMenuStripDebug
             // 
-            this.contextMenuStripDebug.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.itemDebugMode });
-            this.contextMenuStripDebug.Name = "contextMenuStripDebug";
-            this.contextMenuStripDebug.Size = new System.Drawing.Size(167, 28);
+            contextMenuStripDebug.ImageScalingSize = new System.Drawing.Size(20, 20);
+            contextMenuStripDebug.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { itemDebugMode });
+            contextMenuStripDebug.Name = "contextMenuStripDebug";
+            contextMenuStripDebug.Size = new System.Drawing.Size(167, 28);
             // 
             // itemDebugMode
             // 
-            this.itemDebugMode.CheckOnClick = true;
-            this.itemDebugMode.Name = "itemDebugMode";
-            this.itemDebugMode.Size = new System.Drawing.Size(166, 24);
-            this.itemDebugMode.Text = "Debug mode";
+            itemDebugMode.CheckOnClick = true;
+            itemDebugMode.Name = "itemDebugMode";
+            itemDebugMode.Size = new System.Drawing.Size(166, 24);
+            itemDebugMode.Text = "Debug mode";
             // 
             // buttonRepackIso
             // 
-            this.buttonRepackIso.Enabled = false;
-            this.buttonRepackIso.Location = new System.Drawing.Point(11, 230);
-            this.buttonRepackIso.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonRepackIso.Name = "buttonRepackIso";
-            this.buttonRepackIso.Size = new System.Drawing.Size(153, 39);
-            this.buttonRepackIso.TabIndex = 4;
-            this.buttonRepackIso.Text = "Repack ISO";
-            this.buttonRepackIso.UseVisualStyleBackColor = true;
-            this.buttonRepackIso.Click += new System.EventHandler(this.buttonRepackIso_Click);
+            buttonRepackIso.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonRepackIso.Enabled = false;
+            buttonRepackIso.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonRepackIso.Location = new System.Drawing.Point(11, 288);
+            buttonRepackIso.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonRepackIso.Name = "buttonRepackIso";
+            buttonRepackIso.Size = new System.Drawing.Size(153, 49);
+            buttonRepackIso.TabIndex = 4;
+            buttonRepackIso.Text = "Repack ISO";
+            buttonRepackIso.UseVisualStyleBackColor = true;
+            buttonRepackIso.Click += buttonRepackIso_Click;
             // 
             // buttonExtractIsoHelp
             // 
-            this.buttonExtractIsoHelp.Location = new System.Drawing.Point(169, 58);
-            this.buttonExtractIsoHelp.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonExtractIsoHelp.Name = "buttonExtractIsoHelp";
-            this.buttonExtractIsoHelp.Size = new System.Drawing.Size(27, 25);
-            this.buttonExtractIsoHelp.TabIndex = 5;
-            this.buttonExtractIsoHelp.Text = "?";
-            this.buttonExtractIsoHelp.UseVisualStyleBackColor = true;
-            this.buttonExtractIsoHelp.Click += new System.EventHandler(this.buttonExtractIsoHelp_Click);
+            buttonExtractIsoHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            buttonExtractIsoHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonExtractIsoHelp.Location = new System.Drawing.Point(169, 72);
+            buttonExtractIsoHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonExtractIsoHelp.Name = "buttonExtractIsoHelp";
+            buttonExtractIsoHelp.Size = new System.Drawing.Size(27, 31);
+            buttonExtractIsoHelp.TabIndex = 5;
+            buttonExtractIsoHelp.Text = "?";
+            buttonExtractIsoHelp.UseVisualStyleBackColor = true;
+            buttonExtractIsoHelp.Click += buttonExtractIsoHelp_Click;
             // 
             // buttonExtractGameHelp
             // 
-            this.buttonExtractGameHelp.Location = new System.Drawing.Point(169, 105);
-            this.buttonExtractGameHelp.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonExtractGameHelp.Name = "buttonExtractGameHelp";
-            this.buttonExtractGameHelp.Size = new System.Drawing.Size(27, 25);
-            this.buttonExtractGameHelp.TabIndex = 6;
-            this.buttonExtractGameHelp.Text = "?";
-            this.buttonExtractGameHelp.UseVisualStyleBackColor = true;
-            this.buttonExtractGameHelp.Click += new System.EventHandler(this.buttonExtractGameHelp_Click);
+            buttonExtractGameHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            buttonExtractGameHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonExtractGameHelp.Location = new System.Drawing.Point(169, 131);
+            buttonExtractGameHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonExtractGameHelp.Name = "buttonExtractGameHelp";
+            buttonExtractGameHelp.Size = new System.Drawing.Size(27, 31);
+            buttonExtractGameHelp.TabIndex = 6;
+            buttonExtractGameHelp.Text = "?";
+            buttonExtractGameHelp.UseVisualStyleBackColor = true;
+            buttonExtractGameHelp.Click += buttonExtractGameHelp_Click;
             // 
             // buttonRepackGameHelp
             // 
-            this.buttonRepackGameHelp.Location = new System.Drawing.Point(169, 198);
-            this.buttonRepackGameHelp.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonRepackGameHelp.Name = "buttonRepackGameHelp";
-            this.buttonRepackGameHelp.Size = new System.Drawing.Size(27, 25);
-            this.buttonRepackGameHelp.TabIndex = 8;
-            this.buttonRepackGameHelp.Text = "?";
-            this.buttonRepackGameHelp.UseVisualStyleBackColor = true;
-            this.buttonRepackGameHelp.Click += new System.EventHandler(this.buttonRepackGameHelp_Click);
+            buttonRepackGameHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            buttonRepackGameHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonRepackGameHelp.Location = new System.Drawing.Point(169, 248);
+            buttonRepackGameHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonRepackGameHelp.Name = "buttonRepackGameHelp";
+            buttonRepackGameHelp.Size = new System.Drawing.Size(27, 31);
+            buttonRepackGameHelp.TabIndex = 8;
+            buttonRepackGameHelp.Text = "?";
+            buttonRepackGameHelp.UseVisualStyleBackColor = true;
+            buttonRepackGameHelp.Click += buttonRepackGameHelp_Click;
             // 
             // buttonTranslateHelp
             // 
-            this.buttonTranslateHelp.Location = new System.Drawing.Point(169, 151);
-            this.buttonTranslateHelp.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonTranslateHelp.Name = "buttonTranslateHelp";
-            this.buttonTranslateHelp.Size = new System.Drawing.Size(27, 25);
-            this.buttonTranslateHelp.TabIndex = 7;
-            this.buttonTranslateHelp.Text = "?";
-            this.buttonTranslateHelp.UseVisualStyleBackColor = true;
-            this.buttonTranslateHelp.Click += new System.EventHandler(this.buttonTranslateHelp_Click);
+            buttonTranslateHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            buttonTranslateHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonTranslateHelp.Location = new System.Drawing.Point(169, 189);
+            buttonTranslateHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonTranslateHelp.Name = "buttonTranslateHelp";
+            buttonTranslateHelp.Size = new System.Drawing.Size(27, 31);
+            buttonTranslateHelp.TabIndex = 7;
+            buttonTranslateHelp.Text = "?";
+            buttonTranslateHelp.UseVisualStyleBackColor = true;
+            buttonTranslateHelp.Click += buttonTranslateHelp_Click;
             // 
             // buttonRepackIsoHelp
             // 
-            this.buttonRepackIsoHelp.Location = new System.Drawing.Point(169, 245);
-            this.buttonRepackIsoHelp.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonRepackIsoHelp.Name = "buttonRepackIsoHelp";
-            this.buttonRepackIsoHelp.Size = new System.Drawing.Size(27, 25);
-            this.buttonRepackIsoHelp.TabIndex = 9;
-            this.buttonRepackIsoHelp.Text = "?";
-            this.buttonRepackIsoHelp.UseVisualStyleBackColor = true;
-            this.buttonRepackIsoHelp.Click += new System.EventHandler(this.buttonRepackIsoHelp_Click);
+            buttonRepackIsoHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            buttonRepackIsoHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonRepackIsoHelp.Location = new System.Drawing.Point(169, 306);
+            buttonRepackIsoHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonRepackIsoHelp.Name = "buttonRepackIsoHelp";
+            buttonRepackIsoHelp.Size = new System.Drawing.Size(27, 31);
+            buttonRepackIsoHelp.TabIndex = 9;
+            buttonRepackIsoHelp.Text = "?";
+            buttonRepackIsoHelp.UseVisualStyleBackColor = true;
+            buttonRepackIsoHelp.Click += buttonRepackIsoHelp_Click;
             // 
             // pictureBox1
             // 
-            this.pictureBox1.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("pictureBox1.BackgroundImage")));
-            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox1.Location = new System.Drawing.Point(12, 6);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(351, 279);
-            this.pictureBox1.TabIndex = 10;
-            this.pictureBox1.TabStop = false;
+            pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right));
+            pictureBox1.BackgroundImage = ((System.Drawing.Image)resources.GetObject("pictureBox1.BackgroundImage"));
+            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            pictureBox1.Location = new System.Drawing.Point(13, 34);
+            pictureBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new System.Drawing.Size(351, 348);
+            pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            pictureBox1.TabIndex = 10;
+            pictureBox1.TabStop = false;
             // 
             // labelWork
             // 
-            this.labelWork.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.labelWork.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.labelWork.Location = new System.Drawing.Point(11, 2);
-            this.labelWork.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.labelWork.Name = "labelWork";
-            this.labelWork.Size = new System.Drawing.Size(185, 34);
-            this.labelWork.TabIndex = 11;
-            this.labelWork.Text = "Ready";
-            this.labelWork.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            labelWork.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right));
+            labelWork.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)204));
+            labelWork.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            labelWork.Location = new System.Drawing.Point(11, 2);
+            labelWork.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            labelWork.Name = "labelWork";
+            labelWork.Size = new System.Drawing.Size(185, 42);
+            labelWork.TabIndex = 11;
+            labelWork.Text = "Ready";
+            labelWork.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // panel1
             // 
-            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.buttonExtractIso);
-            this.panel1.Controls.Add(this.IsoProgress);
-            this.panel1.Controls.Add(this.labelWork);
-            this.panel1.Controls.Add(this.buttonRepackIsoHelp);
-            this.panel1.Controls.Add(this.buttonRepackGameHelp);
-            this.panel1.Controls.Add(this.buttonTranslateHelp);
-            this.panel1.Controls.Add(this.buttonExtractGameHelp);
-            this.panel1.Controls.Add(this.buttonExtractIsoHelp);
-            this.panel1.Controls.Add(this.buttonRepackIso);
-            this.panel1.Controls.Add(this.buttonRepackGame);
-            this.panel1.Controls.Add(this.buttonTranslate);
-            this.panel1.Controls.Add(this.buttonExtractGame);
-            this.panel1.Location = new System.Drawing.Point(372, 6);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(210, 280);
-            this.panel1.TabIndex = 12;
+            panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Right));
+            panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            panel1.Controls.Add(DeleteGenRes);
+            panel1.Controls.Add(buttonExtractIso);
+            panel1.Controls.Add(IsoProgress);
+            panel1.Controls.Add(labelWork);
+            panel1.Controls.Add(buttonRepackIsoHelp);
+            panel1.Controls.Add(buttonRepackGameHelp);
+            panel1.Controls.Add(buttonTranslateHelp);
+            panel1.Controls.Add(buttonExtractGameHelp);
+            panel1.Controls.Add(buttonExtractIsoHelp);
+            panel1.Controls.Add(buttonRepackIso);
+            panel1.Controls.Add(buttonRepackGame);
+            panel1.Controls.Add(buttonTranslate);
+            panel1.Controls.Add(buttonExtractGame);
+            panel1.Location = new System.Drawing.Point(373, 34);
+            panel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            panel1.Name = "panel1";
+            panel1.Size = new System.Drawing.Size(210, 350);
+            panel1.TabIndex = 12;
+            // 
+            // DeleteGenRes
+            // 
+            DeleteGenRes.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            DeleteGenRes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            DeleteGenRes.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)0));
+            DeleteGenRes.ForeColor = System.Drawing.Color.Red;
+            DeleteGenRes.Location = new System.Drawing.Point(11, 112);
+            DeleteGenRes.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            DeleteGenRes.Name = "DeleteGenRes";
+            DeleteGenRes.Size = new System.Drawing.Size(153, 49);
+            DeleteGenRes.TabIndex = 13;
+            DeleteGenRes.Text = "Delete generated resources";
+            DeleteGenRes.UseVisualStyleBackColor = true;
+            DeleteGenRes.Visible = false;
+            DeleteGenRes.Click += DeleteGenRes_Click;
             // 
             // IsoProgress
             // 
-            this.IsoProgress.Location = new System.Drawing.Point(11, 43);
-            this.IsoProgress.Name = "IsoProgress";
-            this.IsoProgress.Size = new System.Drawing.Size(153, 39);
-            this.IsoProgress.TabIndex = 12;
-            this.IsoProgress.Value = 34;
+            IsoProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            IsoProgress.Location = new System.Drawing.Point(11, 54);
+            IsoProgress.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            IsoProgress.Name = "IsoProgress";
+            IsoProgress.Size = new System.Drawing.Size(153, 49);
+            IsoProgress.TabIndex = 12;
+            IsoProgress.Value = 34;
             // 
             // timerWork
             // 
-            this.timerWork.Interval = 500;
-            this.timerWork.Tick += new System.EventHandler(this.timerWork_Tick);
+            timerWork.Interval = 500;
+            timerWork.Tick += timerWork_Tick;
             // 
             // labelVersion
             // 
-            this.labelVersion.AutoSize = true;
-            this.labelVersion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(170)))), ((int)(((byte)(170)))), ((int)(((byte)(170)))));
-            this.labelVersion.Location = new System.Drawing.Point(13, 266);
-            this.labelVersion.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.labelVersion.Name = "labelVersion";
-            this.labelVersion.Size = new System.Drawing.Size(43, 17);
-            this.labelVersion.TabIndex = 13;
-            this.labelVersion.Text = "X.X.X";
+            labelVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left));
+            labelVersion.AutoSize = true;
+            labelVersion.ForeColor = System.Drawing.Color.FromArgb(((int)((byte)170)), ((int)((byte)170)), ((int)((byte)170)));
+            labelVersion.Location = new System.Drawing.Point(14, 358);
+            labelVersion.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            labelVersion.Name = "labelVersion";
+            labelVersion.Size = new System.Drawing.Size(42, 20);
+            labelVersion.TabIndex = 13;
+            labelVersion.Text = "X.X.X";
+            labelVersion.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // dragbar
+            // 
+            dragbar.Dock = System.Windows.Forms.DockStyle.Top;
+            dragbar.Enabled = false;
+            dragbar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            dragbar.Location = new System.Drawing.Point(0, 0);
+            dragbar.Name = "dragbar";
+            dragbar.Size = new System.Drawing.Size(595, 26);
+            dragbar.TabIndex = 14;
+            dragbar.UseVisualStyleBackColor = true;
+            // 
+            // Exit
+            // 
+            Exit.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
+            Exit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            Exit.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)0));
+            Exit.ForeColor = System.Drawing.Color.Red;
+            Exit.Location = new System.Drawing.Point(563, 0);
+            Exit.Name = "Exit";
+            Exit.Size = new System.Drawing.Size(32, 26);
+            Exit.TabIndex = 15;
+            Exit.Text = "X";
+            Exit.UseVisualStyleBackColor = true;
+            Exit.Click += Exit_click;
             // 
             // FormMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(595, 289);
-            this.Controls.Add(this.labelVersion);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.pictureBox1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4);
-            this.MaximizeBox = false;
-            this.Name = "FormMain";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ToradoraTranslateTool";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
-            this.contextMenuStripDebug.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            this.panel1.ResumeLayout(false);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            ClientSize = new System.Drawing.Size(595, 396);
+            Controls.Add(Exit);
+            Controls.Add(dragbar);
+            Controls.Add(labelVersion);
+            Controls.Add(panel1);
+            Controls.Add(pictureBox1);
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            Icon = ((System.Drawing.Icon)resources.GetObject("$this.Icon"));
+            Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            MaximizeBox = false;
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            Text = "ToradoraTranslateTool";
+            FormClosing += FormMain_FormClosing;
+            contextMenuStripDebug.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            panel1.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
         }
+
+        private System.Windows.Forms.Button DeleteGenRes;
+
+        private System.Windows.Forms.Button Exit;
+
+        private System.Windows.Forms.Button dragbar;
 
         private System.Windows.Forms.ProgressBar IsoProgress;
 
@@ -295,4 +376,3 @@
         private System.Windows.Forms.ToolStripMenuItem itemDebugMode;
     }
 }
-

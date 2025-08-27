@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tenoritool", "tenoritool\te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatWorker", "DatWorker\DatWorker.csproj", "{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MakeGpda", "MakeGpda\MakeGpda.csproj", "{9E7921CC-E516-492C-89E8-DA0655057BD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,5 +40,11 @@ Global
 		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.DebugTests|Any CPU.Build.0 = Debug|Any CPU
 		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38CF6DCE-4A7A-4DC5-9540-FD0B9E5ECC19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E7921CC-E516-492C-89E8-DA0655057BD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E7921CC-E516-492C-89E8-DA0655057BD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E7921CC-E516-492C-89E8-DA0655057BD6}.DebugTests|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E7921CC-E516-492C-89E8-DA0655057BD6}.DebugTests|Any CPU.Build.0 = Debug|Any CPU
+		{9E7921CC-E516-492C-89E8-DA0655057BD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E7921CC-E516-492C-89E8-DA0655057BD6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

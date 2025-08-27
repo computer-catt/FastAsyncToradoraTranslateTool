@@ -33,11 +33,12 @@ public partial class FormMain : Form {
     private void EnableButtons() {
         buttonExtractIso.Enabled = true;
         if (File.Exists(Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "resource.dat"))) // If iso already extracted, enable available steps
-        {
             buttonExtractGame.Enabled = true;
-        }
 
         if (File.Exists(Path.Combine(Application.StartupPath, "Data", "Txt", "utf16.txt", "utf16.txt"))) {
+            DeleteGenRes.Visible = true;
+            buttonExtractGame.Enabled = true;
+            
             buttonTranslate.Enabled = true;
             buttonRepackGame.Enabled = true;
             buttonRepackIso.Enabled = true;
@@ -51,6 +52,7 @@ public partial class FormMain : Form {
         buttonTranslate.Enabled = false;
         buttonRepackGame.Enabled = false;
         buttonRepackIso.Enabled = false;
+        DeleteGenRes.Visible = false;
     }
 
     private async void buttonExtractIso_Click(object sender, EventArgs e) {
@@ -100,43 +102,59 @@ public partial class FormMain : Form {
             await Task.Run(() => ObjTools.ProcessTxtGz(Path.Combine(Application.StartupPath, "Data", "DatWorker", "first")));
             await Task.Run(() => ObjTools.ProcessSeekmap(Path.Combine(Application.StartupPath, "Data", "DatWorker", "first")));*/
 
-            // TODO: reset resources
-            /*await Task.Run(() => { // maybe done?
-                Directory.Delete(Path.Combine(Application.StartupPath, "Data", "Extracted"));
-                Directory.Delete(Path.Combine(Application.StartupPath, "Data", "Obj"));
-                Directory.Delete(Path.Combine(Application.StartupPath, "Data", "Txt"));
-            });*/
-
             await Task.WhenAll(
                 Task.Run(() => { // resource
                     DatTools.ExtractDat(Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "resource.dat")).Wait();
-                    ObjTools.ProcessObjGz(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource"));
+                    ObjTools.ProcessObjGz(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource")).Wait();
                 }),
                 Task.Run(() => { // first
                     DatTools.ExtractDat(Path.Combine(Application.StartupPath, "Data", "Iso", "PSP_GAME", "USRDIR", "first.dat")).Wait();
-                    ObjTools.ProcessTxtGz(Path.Combine(Application.StartupPath, "Data", "Extracted", "first"));
-                    ObjTools.ProcessSeekmap(Path.Combine(Application.StartupPath, "Data", "Extracted", "first"));
+                    ObjTools.ProcessTxtGz(Path.Combine(Application.StartupPath, "Data", "Extracted", "first")).Wait();
+                    ObjTools.ProcessSeekmap(Path.Combine(Application.StartupPath, "Data", "Extracted", "first")).Wait();
                 })
             );
 
-            ChangeStatus(false);
-            EnableButtons();
-
-            stopwatch.Stop();
             MessageBox.Show($"Game files extraction completed in {stopwatch.ElapsedMilliseconds} ms", "ToradoraTranslateTool", MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
         }
         catch (Exception ex) {
-            ChangeStatus(false);
-            EnableButtons();
-            stopwatch.Stop();
             MessageBox.Show($"Error! in {stopwatch.ElapsedMilliseconds} ms" + Environment.NewLine + ex, "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally {
+            ChangeStatus(false);
+            EnableButtons();
             stopwatch.Stop();
         }
     }
 
+    private async void DeleteGenRes_Click(object sender, EventArgs e) {
+        if (MessageBox.Show("This is an effective factory reset.\nAre you sure you want to continue?", "toradoraTranslateTool", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+        
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+        try {
+            ChangeStatus(true);
+            DisableButtons();
+
+            Task[] tasks = [
+                Task.Run(() => Directory.Delete(Path.Combine(Application.StartupPath, "Data", "Extracted"), true)),
+                Task.Run(() => Directory.Delete(Path.Combine(Application.StartupPath, "Data", "Obj"), true)),
+                Task.Run(() => Directory.Delete(Path.Combine(Application.StartupPath, "Data", "Txt"), true))
+            ];
+
+            await Task.WhenAll(tasks);
+            MessageBox.Show($"Resource deletion completed in {stopwatch.ElapsedMilliseconds} ms", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex) {
+            MessageBox.Show($"Error! in {stopwatch.ElapsedMilliseconds} ms" + Environment.NewLine + ex, "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        finally {
+            stopwatch.Stop();
+            ChangeStatus(false);
+            EnableButtons();
+        }
+    }
+    
     private void buttonTranslate_Click(object sender, EventArgs e) {
         FormTranslation myForm = new();
         myForm.Show();
@@ -149,7 +167,7 @@ public partial class FormMain : Form {
             ChangeStatus(true);
             DisableButtons();
 
-            await Task.Run(() => ObjTools.RepackObj(itemDebugMode.Checked));
+            await Task.Run(() => ObjTools.RepackObjs(itemDebugMode.Checked));
             await Task.Run(ObjTools.RepackTxt);
             await Task.Run(() => DatTools.RepackDat(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource.dat-LstOrder.lst")));
             await Task.Run(() => ObjTools.RepackSeekmap(Path.Combine(Application.StartupPath, "Data", "Extracted", "resource.dat"), Path.Combine(Application.StartupPath, "Data", "Extracted", "first")));
@@ -207,7 +225,7 @@ public partial class FormMain : Form {
 
     private void FormMain_FormClosing(object sender, FormClosingEventArgs e) {
         if (!timerWork.Enabled) return;
-        if (MessageBox.Show("There's an ongoing task\nAre you sure you want to close the app?", "ToradoraTranslateTool", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
+        if (MessageBox.Show("There's an ongoing task\nAre you sure you want to close the app?", "ToradoraTranslateTool", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.No) // for some reason those are reversed
             e.Cancel = true;
     }
 
@@ -233,4 +251,16 @@ public partial class FormMain : Form {
     private void buttonRepackIsoHelp_Click(object sender, EventArgs e) {
         MessageBox.Show("This stage will repack ISO and save it in the program folder", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
+
+    protected override void WndProc(ref Message m) {
+        base.WndProc(ref m);
+        if (m.Msg == WM_NCHITTEST)
+            m.Result = HT_CAPTION;
+    }
+
+    private const int WM_NCHITTEST = 0x84;
+    //private const int HT_CLIENT = 0x1;
+    private const int HT_CAPTION = 0x2;
+    
+    private void Exit_click(object sender, EventArgs e) => Application.Exit();
 }

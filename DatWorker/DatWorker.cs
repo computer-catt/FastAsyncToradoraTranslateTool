@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using MakeGpda;
 using Newtonsoft.Json;
 using tenoriTool;
 
@@ -28,6 +28,7 @@ public class DatWorker(string workingDir) {
                 string lstOrder = await File.ReadAllTextAsync(arg);
                 DatTree repackDatTree = JsonConvert.DeserializeObject<DatTree>(lstOrder);
                 await SaveDat(workingDir, repackDatTree);
+                Console.WriteLine($"Done repacking {arg}");
                 continue;
             }
             
@@ -35,6 +36,7 @@ public class DatWorker(string workingDir) {
             DatTree datTree = new(GetDatLstDir(arg));
             await OpenDat(arg, datTree);
             await File.WriteAllTextAsync(arg + "-LstOrder.lst", JsonConvert.SerializeObject(datTree, settings));
+            Console.WriteLine($"Done unpacking {arg}");
         }
         //Console.ReadLine();
     }
@@ -49,7 +51,7 @@ public class DatWorker(string workingDir) {
 
     private async Task<DatTree> OpenDat(string dat, DatTree parent) {
         try {
-            //_ = Console.Out.WriteLineAsync($"Extracting: {dat}"); // Don't wait for me guys
+            _ = Console.Out.WriteLineAsync($"Extracting: {dat}"); // Don't wait for me guys
             var files = await ExtractDatContent(dat);
             if (files == null) return new DatTree(null);
             List<Task<DatTree>> taskList = [];
@@ -76,7 +78,7 @@ public class DatWorker(string workingDir) {
     }
 
     private async Task<string[]> ExtractDatContent(string dat) {
-        string newDir = Path.Combine(workingDir, Path.GetDirectoryName(dat), Path.GetFileNameWithoutExtension(dat));
+        string newDir = Path.Combine(workingDir, Path.GetDirectoryName(dat)!, Path.GetFileNameWithoutExtension(dat));
         if (newDir.StartsWith("\\"))
             newDir = "." + newDir;
 
@@ -84,6 +86,7 @@ public class DatWorker(string workingDir) {
         TenoriToolApi.ProcessReturn processReturn = await TenoriToolApi.ProcessIndividualExtract("", newDir, false, true, "", dat, callbacks);
         bool directoryExist = Directory.Exists(newDir);
         if (!directoryExist) return null;
+        //File.Delete(dat);
         string txt = processReturn.MakeGpdaFileContent;
 
         string lst = GetDatLstDir(dat);
@@ -110,7 +113,7 @@ public class DatWorker(string workingDir) {
         }
         
         if (!File.Exists(datTree.Name)) return false; 
-        _ = Console.Out.WriteLineAsync($"Repacking: {Path.GetFileName(datTree.Name)}"); // It's okay! il catch you guys later
+        _ = Console.Out.WriteLineAsync($"Repacking: {datTree.Name}"); // It's okay! il catch you guys later
         await RepackDat(workingDir, datTree.Name);
         return true;
     }
@@ -123,11 +126,14 @@ public class DatWorker(string workingDir) {
 
             if (lstDir.StartsWith(".\\"))
                 lstDir = Path.Combine(workingDir, lstDir.Substring(2, lstDir.Length - 2));
+
+            string file = lstDir + Path.GetFileNameWithoutExtension(lst);
             
-            Process proc = new() {
+            await MakeGpdaApi.MakeGpda(file, lstDir);
+            /*Process proc = new() {
                 StartInfo = new ProcessStartInfo {
                     FileName = Path.Combine(workingDir, "makeGDP.exe"),
-                    Arguments = "\"" + lstDir + Path.GetFileNameWithoutExtension(lst) + "\"",
+                    Arguments = "\"" + file + "\"",
                     WorkingDirectory = lstDir,
                     UseShellExecute = true,
                     WindowStyle = ProcessWindowStyle.Hidden
@@ -135,7 +141,7 @@ public class DatWorker(string workingDir) {
             };
 
             proc.Start();
-            await proc.WaitForExitAsync();
+            await proc.WaitForExitAsync();*/
 
             return true;
         }
