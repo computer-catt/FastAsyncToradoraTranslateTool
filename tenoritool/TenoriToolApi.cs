@@ -94,7 +94,7 @@ public static class TenoriToolApi {
         if (verbose) output.Entries(arcinfo.EntriesCount);
 
         if (arcinfo.EntriesCount <= 0) {
-            processReturn.Error = $"No entries in Gpda";
+            processReturn.Error = "No entries in Gpda";
             processReturn.Success = false;
             return processReturn;
         }

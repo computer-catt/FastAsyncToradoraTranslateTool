@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace OBJEditor;
 
 public class ObjHelper(byte[] script) {
-    public Dictionary<int, string> Actors;
+    public Dictionary<int, string?>? Actors;
     private Obj editor = new(script);
 
     //Ryuuji「(Aaaaaaaaagh!!!!)」
@@ -11,7 +12,7 @@ public class ObjHelper(byte[] script) {
     {
         string[] strings = editor.Import();
 
-        Actors = new Dictionary<int, string>();
+        Actors = new();
         for (int i = 0; i < strings.Length; i++)
         {
             string line = strings[i];
@@ -29,8 +30,8 @@ public class ObjHelper(byte[] script) {
         return strings;
     }
 
-    public byte[] Export(string[] strings)
-    {
+    public byte[] Export(string[] strings) {
+        if (Actors == null) throw new ArgumentNullException(nameof(strings));
         string[] tmp = new string[strings.Length];
         for (int i = 0; i < strings.Length; i++)
         {

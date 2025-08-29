@@ -35,23 +35,10 @@ namespace CommandLine;
 /// This exception is thrown when a generic parsing error occurs.
 /// </summary>
 [Serializable]
-public sealed class ParserException : Exception, ISerializable
-{
-    internal ParserException() {
-    }
+public sealed class ParserException : Exception {
+    internal ParserException() { }
 
-    internal ParserException(string message)
-        : base(message)
-    {
-    }
+    internal ParserException(string message) : base(message) { }
 
-    internal ParserException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
-
-    internal ParserException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
-    {
-    }
+    internal ParserException(string message, Exception innerException) : base(message, innerException) { }
 }

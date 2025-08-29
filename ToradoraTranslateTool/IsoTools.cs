@@ -10,7 +10,7 @@ namespace ToradoraTranslateTool;
 
 class IsoTools {
     private static void SetUpSz() {
-        SevenZipBase.SetLibraryPath(Path.Combine(Application.StartupPath /*, "Bin"*/, RuntimeInformation.OSArchitecture == Architecture.X64 ? "7z X64.dll" : "7z X86.dll"));
+        SevenZipBase.SetLibraryPath(Path.Combine(Application.StartupPath, RuntimeInformation.OSArchitecture == Architecture.X64 ? "7zX64.dll" : "7zX86.dll"));
     }
 
     public static void ExtractIso(string isoPath, Action<byte> progressCallback = null) {
