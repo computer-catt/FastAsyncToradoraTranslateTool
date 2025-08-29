@@ -30,10 +30,8 @@ using System;
 
 namespace tenoriTool;
 
-class BinaryIO
-{
-    public static uint ReadUInt32(byte[] data, int offset)
-    {
+class BinaryIO {
+    public static uint ReadUInt32(byte[] data, int offset = 0) {
         return Convert.ToUInt32(
             data[offset++]
             | (data[offset++] << 8)
@@ -42,20 +40,8 @@ class BinaryIO
         );
     }
 
-    public static uint ReadUInt32(byte[] data)
-    {
-        return ReadUInt32(data, 0);
-    }
 
-
-    public static ulong ReadUInt64(byte[] data, int offset)
-    {
+    public static ulong ReadUInt64(byte[] data, int offset = 0) {
         return Convert.ToUInt64(ReadUInt32(data, offset)) + (Convert.ToUInt64(ReadUInt32(data, offset + 4)) << 32);
     }
-
-    public static ulong ReadUInt64(byte[] data)
-    {
-        return ReadUInt64(data, 0);
-    }
-    
 }

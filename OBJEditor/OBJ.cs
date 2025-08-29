@@ -5,53 +5,45 @@ using System.Text.RegularExpressions;
 
 namespace OBJEditor;
 
-public class OBJ
-{
-    const short DIALOGUE = 0x64;
-    const short DIALOGUE2 = 0x68;
+public class Obj(byte[] script) {
+    private const short Dialogue = 0x64;
+    private const short Dialogue2 = 0x68;
 
-    const short CHOICE = 0x69;
-    const short CHOICE2 = 0x67;
+    private const short Choice = 0x69;
+    private const short Choice2 = 0x67;
 
-    const short QUESTION = 0x0323;
+    private const short Question = 0x0323;
 
-    const short CHAPTER = 0x2BC;
-
-    byte[] script;
-
-    public OBJ(byte[] script)
-    {
-        this.script = script;
-    }
+    private const short Chapter = 0x2BC;
 
     public string[] Import()
     {
-        List<string> strings = new();
+        List<string> strings = [];
         int blockCount = script.GetInt32(0x00);
         int blockLen = script.GetInt32(0x04);
         for (int i = blockLen, x = 0; x < blockCount; x++, i += blockLen)
         {
             blockLen = script.GetInt32(i);
             int index = i + 6;
-            int entries = 0;
+            int entries;
             switch (script.GetInt16(i + 4))
             {
-                case DIALOGUE2:
-                case DIALOGUE:
+                case Dialogue2:
+                case Dialogue:
                     strings.Add(script.GetString(i + 10));
                     break;
 
-                case CHOICE:
+                case Choice:
                     entries = script.GetInt32(index);
                     for (int y = 0; y < entries; y++)
                     {
                         index += 0x8;
                         strings.Add(script.GetString(index));
-                        index += (script.GetInt32(index) * 2) + 4;
+                        index += script.GetInt32(index) * 2 + 4;
                     }
                     break;
 
-                case CHOICE2:
+                case Choice2:
                     entries = script.GetInt32(index);
                     index += 0x8;
 
@@ -59,7 +51,7 @@ public class OBJ
                     {
 
                         strings.Add(script.GetString(index));
-                        index += (script.GetInt32(index) * 2) + 4;
+                        index += script.GetInt32(index) * 2 + 4;
 
                         if (script.GetInt32(index) == 0x00)
                         {
@@ -70,27 +62,27 @@ public class OBJ
                             System.Diagnostics.Debug.Assert(script.GetInt32(index) == 0x01);
 
                             index += 4;
-                            index += (script.GetInt32(index) * 2) + 4;
+                            index += script.GetInt32(index) * 2 + 4;
                             index += 4;
                         }
                     }
                     break;
 
-                case QUESTION:
+                case Question:
                     index += 4;
                     entries = script.GetInt32(index);
                     index += 4;
 
                     strings.Add(script.GetString(index));
-                    index += 0x4 + (script.GetInt32(index) * 2);
+                    index += 0x4 + script.GetInt32(index) * 2;
 
                     for (int y = 0; y < entries; y++)
                     {
                         strings.Add(script.GetString(index));
-                        index += 0x4 + (script.GetInt32(index) * 2) + 0x24;
+                        index += 0x4 + script.GetInt32(index) * 2 + 0x24;
                     }
                     break;
-                case CHAPTER:
+                case Chapter:
                     strings.Add(script.GetString(index));
                     break;
             }
@@ -99,16 +91,16 @@ public class OBJ
         return strings.ToArray();
     }
 
-    public byte[] Export(string[] Strings)
+    public byte[] Export(string[] strings)
     {
         int blockCount = script.GetInt32(0x00);
         int blockLen = script.GetInt32(0x04);
-        List<List<int>> jumpUpdates = new();
+        List<List<int>> jumpUpdates = [];
 
         MemoryStream output = new();
         script.CopyTo(output, 0, blockLen);
 
-        for (int i = blockLen, x = 0, ID = 0; x < blockCount; x++, i += blockLen)
+        for (int i = blockLen, x = 0, id = 0; x < blockCount; x++, i += blockLen)
         {
             blockLen = script.GetInt32(i);
             MemoryStream newBlock;
@@ -117,16 +109,16 @@ public class OBJ
 
             switch (script.GetInt16(i + 4))
             {
-                case DIALOGUE2:
-                case DIALOGUE:
+                case Dialogue2:
+                case Dialogue:
                     newBlock = new MemoryStream();
                     script.CopyTo(newBlock, i + 4, 0x6);
 
-                    string phrase = Strings[ID++];
+                    string phrase = strings[id++];
                     string secondPhrase = null;
                     if (phrase.Contains("[DEL]"))
                     {
-                        List<int> jumpInfo = new List<int> { x, -1 };
+                        List<int> jumpInfo = [x, -1];
                         jumpUpdates.Add(jumpInfo);
                         x--;
                         blockCount--;
@@ -149,12 +141,12 @@ public class OBJ
                     {
                         newBlock = new MemoryStream();
                         script.CopyTo(newBlock, i + 4, 0x2);
-                        newBlock.Write(new byte[4] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, 4);
+                        newBlock.Write([0xFF, 0xFF, 0xFF, 0xFF], 0, 4);
 
                         secondPhrase.WriteTo(newBlock);
                         WriteBlock(newBlock, output);
 
-                        List<int> jumpInfo = new List<int> { x, 1 };
+                        List<int> jumpInfo = [x, 1];
                         jumpUpdates.Add(jumpInfo);
                         x++;
                         blockCount++;
@@ -162,7 +154,7 @@ public class OBJ
 
                     break;
 
-                case CHOICE:
+                case Choice:
                     newBlock = new MemoryStream();
                     count = script.GetInt32(index + 0x6);
                     script.CopyTo(newBlock, index + 4, 0x2);
@@ -171,15 +163,15 @@ public class OBJ
                     for (int y = 0; y < count; y++)
                     {
                         script.CopyTo(newBlock, index, 0x8);
-                        LimitString(Strings[ID++]).WriteTo(newBlock);
+                        LimitString(strings[id++]).WriteTo(newBlock);
 
                         index += 0x8;
-                        index += (script.GetInt32(index) * 2) + 4;
+                        index += script.GetInt32(index) * 2 + 4;
                     }
 
                     WriteBlock(newBlock, output);
                     break;
-                case CHOICE2:
+                case Choice2:
                     newBlock = new MemoryStream();
                     index += 4;
 
@@ -191,8 +183,8 @@ public class OBJ
 
                     for (int y = 0; y < count; y++)
                     {
-                        LimitString(Strings[ID++]).WriteTo(newBlock);
-                        index += (script.GetInt32(index) * 2) + 4;
+                        LimitString(strings[id++]).WriteTo(newBlock);
+                        index += script.GetInt32(index) * 2 + 4;
 
 
                         script.CopyTo(newBlock, index, 0x4);
@@ -205,9 +197,9 @@ public class OBJ
                         }
                         else
                         {
-                            int LabelLen = (script.GetInt32(index) * 2) + 4;
-                            script.CopyTo(newBlock, index, LabelLen);
-                            index += LabelLen;
+                            int labelLen = script.GetInt32(index) * 2 + 4;
+                            script.CopyTo(newBlock, index, labelLen);
+                            index += labelLen;
 
                             script.CopyTo(newBlock, index, 0x4);
                             index += 4;
@@ -217,21 +209,21 @@ public class OBJ
                     WriteBlock(newBlock, output);
                     break;
 
-                case QUESTION:
+                case Question:
                     newBlock = new MemoryStream();
 
                     count = script.GetInt32(index + 0xA);
                     script.CopyTo(newBlock, index + 4, 0xA);
                     index += 0xE;
 
-                    index += (script.GetInt32(index) * 2) + 4;
-                    LimitString(Strings[ID++]).WriteTo(newBlock);
+                    index += script.GetInt32(index) * 2 + 4;
+                    LimitString(strings[id++]).WriteTo(newBlock);
 
                     for (int y = 0; y < count; y++)
                     {
-                        index += (script.GetInt32(index) * 2) + 4;
+                        index += script.GetInt32(index) * 2 + 4;
 
-                        LimitString(Strings[ID++]).WriteTo(newBlock);
+                        LimitString(strings[id++]).WriteTo(newBlock);
 
 
                         script.CopyTo(newBlock, index, 0x24);
@@ -241,14 +233,14 @@ public class OBJ
                     WriteBlock(newBlock, output);
                     break;
 
-                case CHAPTER:
+                case Chapter:
                     newBlock = new MemoryStream();
                     script.CopyTo(newBlock, index + 4, 0x2);
 
                     index += 0x6;
-                    index += (script.GetInt32(index) * 2) + 4;
+                    index += script.GetInt32(index) * 2 + 4;
 
-                    Strings[ID++].WriteTo(newBlock);
+                    strings[id++].WriteTo(newBlock);
                     script.CopyTo(newBlock, index, 0x6);
 
                     WriteBlock(newBlock, output);
@@ -293,26 +285,26 @@ public class OBJ
         }
     }
 
-    private string LimitString(string Input)
+    private string LimitString(string input)
     {
-        string Result = Input.Replace("＿", @" ");
-        return Result;
+        string result = input.Replace("＿", " ");
+        return result;
     }
-    public void WriteBlock(Stream Content, Stream Output)
+    public void WriteBlock(Stream content, Stream output)
     {
-        int NewLen = (int)Content.Length + 4;
-        int Blank = 0;
+        int newLen = (int)content.Length + 4;
+        int blank = 0;
 
-        while ((NewLen + Blank) % 0x10 != 0x00)
-            Blank++;
+        while ((newLen + blank) % 0x10 != 0x00)
+            blank++;
 
-        if (Blank <= 0x8)
-            Blank += 0x10;
+        if (blank <= 0x8)
+            blank += 0x10;
 
-        NewLen += Blank;
-        BitConverter.GetBytes(NewLen).CopyTo(Output, 0, 4);
-        Content.Seek(0, 0);
-        Content.CopyTo(Output);
-        (new byte[Blank]).CopyTo(Output, 0, Blank);
+        newLen += blank;
+        BitConverter.GetBytes(newLen).CopyTo(output, 0, 4);
+        content.Seek(0, 0);
+        content.CopyTo(output);
+        new byte[blank].CopyTo(output, 0, blank);
     }
 }

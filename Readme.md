@@ -4,10 +4,10 @@ Name inspired by the [FastAsyncWorldEdit](https://www.spigotmc.org/resources/fas
 
 ### Improvements upon the base project
 - Added a progress bar for iso extracting
-- Improved game file extraction time by 1422%!
-  - old time 396298 vs new time 26028
-- Improved game file repacking time by 167.37%
-  - old time 189438 vs new time 70853
+- Improved game file extraction time by 1,848.80 %!
+  - old time 274548 ms vs new time 14088 ms
+- Improved game file repacking time by 2,037.40 %!
+  - old time 189438 ms vs new time 8863 ms
 - Reworked file structure! Allows you to easily delete all generated resources
 
 ### Why?
@@ -24,7 +24,7 @@ With this program you will be able to extract ISO, extract game files, translate
 
 ## How do I translate the game?
 
-All you need is the game's ISO file. You can use the original Japanese version, or already patched.
+All you need is the game's ISO file. You can use the original Japanese version, or already patched (except if it's patched by this app).
 
 After you got the ISO file, just open the program, and start with the first stage. Next to each step there is a button with a question mark, when you click on it, you will get all the necessary information.
 
@@ -39,6 +39,20 @@ To remove a phrase, you must write "\[DEL\]" in it. For example, "Unnecessary ph
 
 If you're repacking for a second time, You have to delete the Data/Exported directory.
 
+## Start game button?
+
+A small utility to quickly run repacked files and test changes instead of waiting for iso repacking and stuff.
+
+Use the config file `GameStart.conf` in the data folder to change the executable and args
+
+Executable goes on line 1 and args go on line 2.
+
+__The path of the unpacked iso folder would be appended to the args line at launch__
+
+Example available [here](https://github.com/computer-catt/FastAsyncToradoraTranslateTool/blob/master/StartGame.conf)
+
+If you are using the example make sure to change the paths and include the ppsspp config file
+
 ## Features
 
 - ISO extracting and repacking
@@ -48,6 +62,7 @@ If you're repacking for a second time, You have to delete the Data/Exported dire
 - Automatic line break insertion
 - Enabling game debug mode, where you can teleport to any level
 - Ability to remove/add phrases in dialogs
+- Ability to set up a start program to quickly test game changes
 
 ## Special thanks
 
@@ -62,5 +77,5 @@ If you're repacking for a second time, You have to delete the Data/Exported dire
 - You! Thanks for reading even if you don't plan on using the software. :3
 
 ## Screenshots
-![Main window](https://i.imgur.com/hcxCaKL.png)
+![Main window](https://i.imgur.com/QxW8w5a.png)
 ![Translation window](https://i.imgur.com/ZOm8WEy.png)

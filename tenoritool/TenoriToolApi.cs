@@ -221,8 +221,8 @@ public static class TenoriToolApi {
         
         while (remainingBytes > 0) {
             int readSize = remainingBytes < bufferSize ? remainingBytes : bufferSize;
-            await inputStream.ReadAsync(readBuffer, 0, readSize);
-            await destinationStream.WriteAsync(readBuffer, 0, readSize);
+            await inputStream.ReadAsync(readBuffer.AsMemory(0, readSize));
+            await destinationStream.WriteAsync(readBuffer.AsMemory(0, readSize));
             remainingBytes -= readSize;
         }
 

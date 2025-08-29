@@ -34,6 +34,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CommandLine;
 using CommandLine.Text;
+using tenoritool.Properties;
 using static tenoriTool.TenoriToolApi;
 
 namespace tenoriTool;

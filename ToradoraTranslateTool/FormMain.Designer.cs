@@ -35,7 +35,7 @@
             buttonRepackGame = new System.Windows.Forms.Button();
             contextMenuStripDebug = new System.Windows.Forms.ContextMenuStrip(components);
             itemDebugMode = new System.Windows.Forms.ToolStripMenuItem();
-            buttonRepackIso = new System.Windows.Forms.Button();
+            buttonExportGame = new System.Windows.Forms.Button();
             buttonExtractIsoHelp = new System.Windows.Forms.Button();
             buttonExtractGameHelp = new System.Windows.Forms.Button();
             buttonRepackGameHelp = new System.Windows.Forms.Button();
@@ -44,12 +44,16 @@
             pictureBox1 = new System.Windows.Forms.PictureBox();
             labelWork = new System.Windows.Forms.Label();
             panel1 = new System.Windows.Forms.Panel();
-            DeleteGenRes = new System.Windows.Forms.Button();
+            ExtractProgress = new System.Windows.Forms.ProgressBar();
+            buttonDeleteGenRes = new System.Windows.Forms.Button();
             IsoProgress = new System.Windows.Forms.ProgressBar();
+            buttonStartGameHelp = new System.Windows.Forms.Button();
+            buttonStartGame = new System.Windows.Forms.Button();
             timerWork = new System.Windows.Forms.Timer(components);
             labelVersion = new System.Windows.Forms.Label();
             dragbar = new System.Windows.Forms.Button();
             Exit = new System.Windows.Forms.Button();
+            EasterEgg = new System.Windows.Forms.Label();
             contextMenuStripDebug.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             panel1.SuspendLayout();
@@ -59,7 +63,7 @@
             // 
             buttonExtractIso.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
             buttonExtractIso.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonExtractIso.Location = new System.Drawing.Point(11, 54);
+            buttonExtractIso.Location = new System.Drawing.Point(11, 40);
             buttonExtractIso.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonExtractIso.Name = "buttonExtractIso";
             buttonExtractIso.Size = new System.Drawing.Size(153, 49);
@@ -73,7 +77,7 @@
             buttonExtractGame.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
             buttonExtractGame.Enabled = false;
             buttonExtractGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonExtractGame.Location = new System.Drawing.Point(11, 112);
+            buttonExtractGame.Location = new System.Drawing.Point(11, 98);
             buttonExtractGame.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonExtractGame.Name = "buttonExtractGame";
             buttonExtractGame.Size = new System.Drawing.Size(153, 49);
@@ -87,7 +91,7 @@
             buttonTranslate.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
             buttonTranslate.Enabled = false;
             buttonTranslate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonTranslate.Location = new System.Drawing.Point(11, 171);
+            buttonTranslate.Location = new System.Drawing.Point(11, 157);
             buttonTranslate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonTranslate.Name = "buttonTranslate";
             buttonTranslate.Size = new System.Drawing.Size(153, 49);
@@ -102,7 +106,7 @@
             buttonRepackGame.ContextMenuStrip = contextMenuStripDebug;
             buttonRepackGame.Enabled = false;
             buttonRepackGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonRepackGame.Location = new System.Drawing.Point(11, 229);
+            buttonRepackGame.Location = new System.Drawing.Point(11, 215);
             buttonRepackGame.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonRepackGame.Name = "buttonRepackGame";
             buttonRepackGame.Size = new System.Drawing.Size(153, 49);
@@ -125,25 +129,25 @@
             itemDebugMode.Size = new System.Drawing.Size(166, 24);
             itemDebugMode.Text = "Debug mode";
             // 
-            // buttonRepackIso
+            // buttonExportGame
             // 
-            buttonRepackIso.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
-            buttonRepackIso.Enabled = false;
-            buttonRepackIso.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonRepackIso.Location = new System.Drawing.Point(11, 288);
-            buttonRepackIso.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            buttonRepackIso.Name = "buttonRepackIso";
-            buttonRepackIso.Size = new System.Drawing.Size(153, 49);
-            buttonRepackIso.TabIndex = 4;
-            buttonRepackIso.Text = "Repack ISO";
-            buttonRepackIso.UseVisualStyleBackColor = true;
-            buttonRepackIso.Click += buttonRepackIso_Click;
+            buttonExportGame.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonExportGame.Enabled = false;
+            buttonExportGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonExportGame.Location = new System.Drawing.Point(11, 333);
+            buttonExportGame.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonExportGame.Name = "buttonExportGame";
+            buttonExportGame.Size = new System.Drawing.Size(153, 49);
+            buttonExportGame.TabIndex = 4;
+            buttonExportGame.Text = "Export game";
+            buttonExportGame.UseVisualStyleBackColor = true;
+            buttonExportGame.Click += ButtonExportGame_Click;
             // 
             // buttonExtractIsoHelp
             // 
             buttonExtractIsoHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
             buttonExtractIsoHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonExtractIsoHelp.Location = new System.Drawing.Point(169, 72);
+            buttonExtractIsoHelp.Location = new System.Drawing.Point(169, 58);
             buttonExtractIsoHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonExtractIsoHelp.Name = "buttonExtractIsoHelp";
             buttonExtractIsoHelp.Size = new System.Drawing.Size(27, 31);
@@ -156,7 +160,7 @@
             // 
             buttonExtractGameHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
             buttonExtractGameHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonExtractGameHelp.Location = new System.Drawing.Point(169, 131);
+            buttonExtractGameHelp.Location = new System.Drawing.Point(169, 117);
             buttonExtractGameHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonExtractGameHelp.Name = "buttonExtractGameHelp";
             buttonExtractGameHelp.Size = new System.Drawing.Size(27, 31);
@@ -169,7 +173,7 @@
             // 
             buttonRepackGameHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
             buttonRepackGameHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonRepackGameHelp.Location = new System.Drawing.Point(169, 248);
+            buttonRepackGameHelp.Location = new System.Drawing.Point(169, 234);
             buttonRepackGameHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonRepackGameHelp.Name = "buttonRepackGameHelp";
             buttonRepackGameHelp.Size = new System.Drawing.Size(27, 31);
@@ -182,7 +186,7 @@
             // 
             buttonTranslateHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
             buttonTranslateHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonTranslateHelp.Location = new System.Drawing.Point(169, 189);
+            buttonTranslateHelp.Location = new System.Drawing.Point(169, 175);
             buttonTranslateHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonTranslateHelp.Name = "buttonTranslateHelp";
             buttonTranslateHelp.Size = new System.Drawing.Size(27, 31);
@@ -195,7 +199,7 @@
             // 
             buttonRepackIsoHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
             buttonRepackIsoHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            buttonRepackIsoHelp.Location = new System.Drawing.Point(169, 306);
+            buttonRepackIsoHelp.Location = new System.Drawing.Point(169, 351);
             buttonRepackIsoHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             buttonRepackIsoHelp.Name = "buttonRepackIsoHelp";
             buttonRepackIsoHelp.Size = new System.Drawing.Size(27, 31);
@@ -208,13 +212,13 @@
             // 
             pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right));
             pictureBox1.BackgroundImage = ((System.Drawing.Image)resources.GetObject("pictureBox1.BackgroundImage"));
-            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             pictureBox1.Location = new System.Drawing.Point(13, 34);
             pictureBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new System.Drawing.Size(351, 348);
-            pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            pictureBox1.Size = new System.Drawing.Size(351, 399);
+            pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             pictureBox1.TabIndex = 10;
             pictureBox1.TabStop = false;
             // 
@@ -235,50 +239,90 @@
             // 
             panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Right));
             panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            panel1.Controls.Add(DeleteGenRes);
+            panel1.Controls.Add(buttonExportGame);
+            panel1.Controls.Add(ExtractProgress);
+            panel1.Controls.Add(buttonDeleteGenRes);
             panel1.Controls.Add(buttonExtractIso);
             panel1.Controls.Add(IsoProgress);
             panel1.Controls.Add(labelWork);
             panel1.Controls.Add(buttonRepackIsoHelp);
+            panel1.Controls.Add(buttonStartGameHelp);
             panel1.Controls.Add(buttonRepackGameHelp);
             panel1.Controls.Add(buttonTranslateHelp);
             panel1.Controls.Add(buttonExtractGameHelp);
             panel1.Controls.Add(buttonExtractIsoHelp);
-            panel1.Controls.Add(buttonRepackIso);
+            panel1.Controls.Add(buttonStartGame);
             panel1.Controls.Add(buttonRepackGame);
             panel1.Controls.Add(buttonTranslate);
             panel1.Controls.Add(buttonExtractGame);
             panel1.Location = new System.Drawing.Point(373, 34);
             panel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             panel1.Name = "panel1";
-            panel1.Size = new System.Drawing.Size(210, 350);
+            panel1.Size = new System.Drawing.Size(210, 399);
             panel1.TabIndex = 12;
             // 
-            // DeleteGenRes
+            // ExtractProgress
             // 
-            DeleteGenRes.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
-            DeleteGenRes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            DeleteGenRes.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)0));
-            DeleteGenRes.ForeColor = System.Drawing.Color.Red;
-            DeleteGenRes.Location = new System.Drawing.Point(11, 112);
-            DeleteGenRes.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            DeleteGenRes.Name = "DeleteGenRes";
-            DeleteGenRes.Size = new System.Drawing.Size(153, 49);
-            DeleteGenRes.TabIndex = 13;
-            DeleteGenRes.Text = "Delete generated resources";
-            DeleteGenRes.UseVisualStyleBackColor = true;
-            DeleteGenRes.Visible = false;
-            DeleteGenRes.Click += DeleteGenRes_Click;
+            ExtractProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            ExtractProgress.Location = new System.Drawing.Point(11, 333);
+            ExtractProgress.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            ExtractProgress.Name = "ExtractProgress";
+            ExtractProgress.Size = new System.Drawing.Size(153, 49);
+            ExtractProgress.TabIndex = 14;
+            ExtractProgress.Value = 34;
+            // 
+            // buttonDeleteGenRes
+            // 
+            buttonDeleteGenRes.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonDeleteGenRes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonDeleteGenRes.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)0));
+            buttonDeleteGenRes.ForeColor = System.Drawing.Color.Red;
+            buttonDeleteGenRes.Location = new System.Drawing.Point(11, 98);
+            buttonDeleteGenRes.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonDeleteGenRes.Name = "buttonDeleteGenRes";
+            buttonDeleteGenRes.Size = new System.Drawing.Size(153, 49);
+            buttonDeleteGenRes.TabIndex = 13;
+            buttonDeleteGenRes.Text = "Delete generated resources";
+            buttonDeleteGenRes.UseVisualStyleBackColor = true;
+            buttonDeleteGenRes.Visible = false;
+            buttonDeleteGenRes.Click += ButtonDeleteGenResClick;
             // 
             // IsoProgress
             // 
             IsoProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
-            IsoProgress.Location = new System.Drawing.Point(11, 54);
+            IsoProgress.Location = new System.Drawing.Point(11, 40);
             IsoProgress.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             IsoProgress.Name = "IsoProgress";
             IsoProgress.Size = new System.Drawing.Size(153, 49);
             IsoProgress.TabIndex = 12;
             IsoProgress.Value = 34;
+            // 
+            // buttonStartGameHelp
+            // 
+            buttonStartGameHelp.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            buttonStartGameHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonStartGameHelp.Location = new System.Drawing.Point(169, 293);
+            buttonStartGameHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonStartGameHelp.Name = "buttonStartGameHelp";
+            buttonStartGameHelp.Size = new System.Drawing.Size(27, 31);
+            buttonStartGameHelp.TabIndex = 8;
+            buttonStartGameHelp.Text = "?";
+            buttonStartGameHelp.UseVisualStyleBackColor = true;
+            buttonStartGameHelp.Click += buttonStartGameHelp_Click;
+            // 
+            // buttonStartGame
+            // 
+            buttonStartGame.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right));
+            buttonStartGame.Enabled = false;
+            buttonStartGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonStartGame.Location = new System.Drawing.Point(11, 274);
+            buttonStartGame.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            buttonStartGame.Name = "buttonStartGame";
+            buttonStartGame.Size = new System.Drawing.Size(153, 49);
+            buttonStartGame.TabIndex = 3;
+            buttonStartGame.Text = "Start game";
+            buttonStartGame.UseVisualStyleBackColor = true;
+            buttonStartGame.Click += buttonStartGame_Click;
             // 
             // timerWork
             // 
@@ -290,7 +334,7 @@
             labelVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left));
             labelVersion.AutoSize = true;
             labelVersion.ForeColor = System.Drawing.Color.FromArgb(((int)((byte)170)), ((int)((byte)170)), ((int)((byte)170)));
-            labelVersion.Location = new System.Drawing.Point(14, 358);
+            labelVersion.Location = new System.Drawing.Point(14, 407);
             labelVersion.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             labelVersion.Name = "labelVersion";
             labelVersion.Size = new System.Drawing.Size(42, 20);
@@ -323,11 +367,21 @@
             Exit.UseVisualStyleBackColor = true;
             Exit.Click += Exit_click;
             // 
+            // EasterEgg
+            // 
+            EasterEgg.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
+            EasterEgg.Location = new System.Drawing.Point(-149, 51);
+            EasterEgg.Name = "EasterEgg";
+            EasterEgg.Size = new System.Drawing.Size(120, 28);
+            EasterEgg.TabIndex = 16;
+            EasterEgg.Text = "Taigaaaaa :333";
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(595, 396);
+            ClientSize = new System.Drawing.Size(595, 445);
+            Controls.Add(EasterEgg);
             Controls.Add(Exit);
             Controls.Add(dragbar);
             Controls.Add(labelVersion);
@@ -347,7 +401,13 @@
             PerformLayout();
         }
 
-        private System.Windows.Forms.Button DeleteGenRes;
+        private System.Windows.Forms.Button buttonStartGame;
+        private System.Windows.Forms.Button buttonStartGameHelp;
+
+        private System.Windows.Forms.ProgressBar ExtractProgress;
+        private System.Windows.Forms.Label EasterEgg;
+
+        private System.Windows.Forms.Button buttonDeleteGenRes;
 
         private System.Windows.Forms.Button Exit;
 
@@ -361,7 +421,7 @@
         private System.Windows.Forms.Button buttonExtractGame;
         private System.Windows.Forms.Button buttonTranslate;
         private System.Windows.Forms.Button buttonRepackGame;
-        private System.Windows.Forms.Button buttonRepackIso;
+        private System.Windows.Forms.Button buttonExportGame;
         private System.Windows.Forms.Button buttonExtractIsoHelp;
         private System.Windows.Forms.Button buttonExtractGameHelp;
         private System.Windows.Forms.Button buttonRepackGameHelp;

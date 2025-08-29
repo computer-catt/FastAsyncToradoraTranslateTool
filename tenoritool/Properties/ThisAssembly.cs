@@ -26,6 +26,8 @@
 // THE SOFTWARE.
 #endregion
 
+namespace tenoritool.Properties;
+
 static class ThisAssembly
 {
     internal const string Name = "tenoritool";

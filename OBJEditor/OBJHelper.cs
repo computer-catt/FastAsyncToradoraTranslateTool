@@ -1,50 +1,46 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
-namespace OBJEditor
-{
-    public class OBJHelper
+namespace OBJEditor;
+
+public class ObjHelper(byte[] script) {
+    public Dictionary<int, string> Actors;
+    private Obj editor = new(script);
+
+    //Ryuuji「(Aaaaaaaaagh!!!!)」
+    public string[] Import()
     {
-        public Dictionary<int, string> actors;
-        OBJ editor;
-        public OBJHelper(byte[] script) { editor = new OBJ(script); }
+        string[] strings = editor.Import();
 
-        //Ryuuji「(Aaaaaaaaagh!!!!)」
-        public string[] Import()
+        Actors = new Dictionary<int, string>();
+        for (int i = 0; i < strings.Length; i++)
         {
-            string[] strings = editor.Import();
-
-            actors = new Dictionary<int, string>();
-            for (int i = 0; i < strings.Length; i++)
+            string line = strings[i];
+            Actors[i] = null;
+            if (line.EndsWith('」') && line.Contains('「'))
             {
-                string line = strings[i];
-                actors[i] = null;
-                if (line.EndsWith("」") && line.Contains('「'))
-                {
-                    string actor = line.Substring(0, line.IndexOf('「'));
-                    line = line.Substring(actor.Length, line.Length - actor.Length);
-                    actors[i] = actor;
-                }
-
-                strings[i] = line;
+                string actor = line[..line.IndexOf('「')];
+                line = line.Substring(actor.Length, line.Length - actor.Length);
+                Actors[i] = actor;
             }
 
-            return strings;
+            strings[i] = line;
         }
 
-        public byte[] Export(string[] strings)
+        return strings;
+    }
+
+    public byte[] Export(string[] strings)
+    {
+        string[] tmp = new string[strings.Length];
+        for (int i = 0; i < strings.Length; i++)
         {
-            string[] tmp = new string[strings.Length];
-            for (int i = 0; i < strings.Length; i++)
-            {
-                string Line = strings[i];
-                if (actors[i] != null)
-                    Line = actors[i] + Line;
+            string line = strings[i];
+            if (Actors[i] != null)
+                line = Actors[i] + line;
 
-                tmp[i] = Line;
-            }
-
-            return editor.Export(tmp);
+            tmp[i] = line;
         }
+
+        return editor.Export(tmp);
     }
 }

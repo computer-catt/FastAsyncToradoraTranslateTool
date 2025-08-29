@@ -43,7 +43,7 @@ public class DatWorker(string workingDir) {
     
     public class DatTree(string name) {
         [JsonProperty("n")] public string Name = name;
-        [JsonProperty("c")] public List<DatTree> Children = null;
+        [JsonProperty("c")] public List<DatTree> Children;
     }
     
     
@@ -84,8 +84,7 @@ public class DatWorker(string workingDir) {
 
         TenoriToolApi.TenoriCallbacks callbacks = TenoriToolApi.TenoriCallbacks.None();
         TenoriToolApi.ProcessReturn processReturn = await TenoriToolApi.ProcessIndividualExtract("", newDir, false, true, "", dat, callbacks);
-        bool directoryExist = Directory.Exists(newDir);
-        if (!directoryExist) return null;
+        if (!processReturn.Success) return null;
         //File.Delete(dat);
         string txt = processReturn.MakeGpdaFileContent;
 
@@ -130,19 +129,6 @@ public class DatWorker(string workingDir) {
             string file = lstDir + Path.GetFileNameWithoutExtension(lst);
             
             await MakeGpdaApi.MakeGpda(file, lstDir);
-            /*Process proc = new() {
-                StartInfo = new ProcessStartInfo {
-                    FileName = Path.Combine(workingDir, "makeGDP.exe"),
-                    Arguments = "\"" + file + "\"",
-                    WorkingDirectory = lstDir,
-                    UseShellExecute = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                }
-            };
-
-            proc.Start();
-            await proc.WaitForExitAsync();*/
-
             return true;
         }
         catch (Exception e) {
