@@ -35,10 +35,6 @@ You can automatically insert line breaks into the current file or all files at o
 To add a new phrase, you must write it in square brackets in the phrase after which you want to insert the new phrase. For example, "First phrase\[Second phrase\]".  
 To remove a phrase, you must write "\[DEL\]" in it. For example, "Unnecessary phrase\[DEL\]"
 
-### Note
-
-If you're repacking for a second time, You have to delete the Data/Exported directory.
-
 ## Start game button?
 
 A small utility to quickly run repacked files and test changes instead of waiting for iso repacking and stuff.
@@ -52,6 +48,17 @@ __The path of the unpacked iso folder would be appended to the args line at laun
 Example available [here](https://github.com/computer-catt/FastAsyncToradoraTranslateTool/blob/master/StartGame.conf)
 
 If you are using the example make sure to change the paths and include the ppsspp config file
+
+## Repacking iso file
+The implementation in the application is platform specific. 
+
+You need to have access to `mkisofs`, a utility from cdrtools.
+
+If you get an exception repacking the application, you need to either add mkisofs to path or put the executable path into the `mkisofs.conf` file alongside the application executable.
+
+if you cant find one for windows there's one sketchy one included in this repository in ToradoraTranslateTool/mkisofs, best of luck.
+
+for arch you have to run `pacman -S cdrtools` to install because its cool.
 
 ## Features
 

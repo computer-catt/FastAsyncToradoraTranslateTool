@@ -16,6 +16,7 @@ namespace ToradoraTranslateTool;
 
 public partial class FormMain : Form {
     private readonly string dataDir = Path.Combine(Application.StartupPath, "Data");
+    
     public FormMain() {
         InitializeComponent();
         EnableButtons();
@@ -25,6 +26,8 @@ public partial class FormMain : Form {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
+    private RyuujiApi.RyuujiApi api = new (Application.StartupPath);
+    
     // TODO:
     // 1. Extract ISO            ✓
     // 2. Extract .dat           ✓
@@ -62,23 +65,25 @@ public partial class FormMain : Form {
     }
 
     private async void buttonExtractIso_Click(object sender, EventArgs e) {
+        Stopwatch stopwatch = new();
         try {
             using OpenFileDialog openFileDialog = new();
-            openFileDialog.Filter = "Toradora ISO (*.iso) | *.iso";
+            openFileDialog.Filter = "ISO (*.iso) | *.iso";
             if (openFileDialog.ShowDialog() != DialogResult.OK) return;
-
+            
             ChangeStatus(true);
             DisableButtons();
 
             IsoProgress.Value = 0;
             buttonExtractIso.Visible = false;
 
-            await Task.Run(() => IsoTools.ExtractIso(openFileDialog.FileName, progress => IsoProgress.Value = progress));
-            MessageBox.Show("Iso extraction completed", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            stopwatch.Start();
+            await Task.Run(() => api.ExtractIso(openFileDialog.FileName, null, progress => IsoProgress.Value = progress).Wait());
+            MessageBox.Show($"Iso extraction completed  in {stopwatch.ElapsedMilliseconds} ms.", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex) {
             PrintStackTrace(ex);
-            MessageBox.Show("Error!" + Environment.NewLine + ex, "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"Error in {stopwatch.ElapsedMilliseconds} ms!\n" + ex, "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Error);
             throw;
         }
         finally {
@@ -86,6 +91,7 @@ public partial class FormMain : Form {
             EnableButtons();
             buttonExtractIso.Visible = true;
             IsoProgress.Value = 0;
+            stopwatch.Stop();
         }
     }
 
@@ -105,17 +111,7 @@ public partial class FormMain : Form {
             await Task.Run(() => ObjTools.ProcessTxtGz(Path.Combine(dataDir, "Extracted", "first")));
             await Task.Run(() => ObjTools.ProcessSeekmap(Path.Combine(dataDir, "Extracted", "first")));*/
 
-            await Task.WhenAll(
-                Task.Run(() => { // resource
-                    DatTools.ExtractDat(Path.Combine(dataDir, "Iso", "PSP_GAME", "USRDIR", "resource.dat")).Wait();
-                    ObjTools.ProcessObjGz(Path.Combine(dataDir, "Extracted", "resource")).Wait();
-                }),
-                Task.Run(() => { // first
-                    DatTools.ExtractDat(Path.Combine(dataDir, "Iso", "PSP_GAME", "USRDIR", "first.dat")).Wait();
-                    ObjTools.ProcessTxtGz(Path.Combine(dataDir, "Extracted", "first")).Wait();
-                    ObjTools.ProcessSeekmap(Path.Combine(dataDir, "Extracted", "first")).Wait();
-                })
-            );
+            await api.ExtractGame(dataDir);
 
             MessageBox.Show($"Game files extraction completed in {stopwatch.ElapsedMilliseconds} ms", "ToradoraTranslateTool", MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -177,15 +173,8 @@ public partial class FormMain : Form {
             ChangeStatus(true);
             DisableButtons();
 
-            await Task.Run(() => ObjTools.RepackObjs(itemDebugMode.Checked));
-            await Task.Run(ObjTools.RepackTxts);
-            await Task.Run(() => DatTools.RepackDat(Path.Combine(dataDir, "Extracted", "resource.dat-LstOrder.lst")));
-            await Task.Run(() => ObjTools.RepackSeekmap(Path.Combine(dataDir, "Extracted", "resource.dat"), Path.Combine(dataDir, "Extracted", "first")));
-            await Task.Run(() => DatTools.RepackDat(Path.Combine(dataDir, "Extracted", "first.dat-LstOrder.lst")));
-            File.Create(Path.Combine(dataDir, "Extracted", "-"));
-            await Task.Run(() => File.Copy(Path.Combine(dataDir, "Extracted", "resource.dat"), Path.Combine(dataDir, "Iso", "PSP_GAME", "USRDIR", "resource.dat"), true));
-            await Task.Run(() => File.Copy(Path.Combine(dataDir, "Extracted", "first.dat"), Path.Combine(dataDir, "Iso", "PSP_GAME", "USRDIR", "first.dat"), true));
-
+            await api.RepackGame(dataDir, itemDebugMode.Checked);
+            
             MessageBox.Show($"Game files repacking completed in {watch.ElapsedMilliseconds} ms", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex) {
@@ -211,7 +200,7 @@ public partial class FormMain : Form {
             
             SaveFileDialog saveFileDialog = new() {
                 Title = "Save File",
-                Filter = "ISO files (*.iso)|*.iso|ZIP files (*.zip)|*.zip|All files (*.*)|*.*"
+                Filter = "ISO files (*.iso)|*.iso|All files (*.*)|*.*"
             };
 
             string isoPath = Path.Combine(dataDir, "Iso");
@@ -223,9 +212,9 @@ public partial class FormMain : Form {
                 
                 Action<float> callback = progress => ExtractProgress.Value = (int)progress;
                 
-                if (Path.GetExtension(selectedPath).Contains("iso", StringComparison.CurrentCultureIgnoreCase))
-                    await Task.Run(() => IsoTools.RepackIso(isoPath, selectedPath, callback));
-                else await IsoTools.RepackZip(isoPath, selectedPath, callback);
+                string mkisofs = "mkisofs";
+                if (File.Exists("mkisofs.conf")) mkisofs = await File.ReadAllTextAsync("mkisofs.conf");
+                await Task.Run(() => api.RepackIso(mkisofs, isoPath, selectedPath, callback));
             }
             /*else {
                 using FolderBrowserDialog folderBrowserDialog = new();
@@ -261,35 +250,15 @@ public partial class FormMain : Form {
         }
     }
 
-    private void buttonStartGame_Click(object sender, EventArgs e) {
+    private async void buttonStartGame_Click(object sender, EventArgs e) {
         Stopwatch watch = new();
         watch.Start();
         try {
             ChangeStatus(true);
             DisableButtons();
-            string filename = "Data/StartGame.conf";
-            
-            if (!File.Exists(filename) || new FileInfo(filename).Length == 0) {
-                File.Create(filename);
-                string errorText = $"Not configured!\n{Path.GetFullPath(filename)}";
-                buttonStartGameHelp_Click(sender, e);
-                throw new DataException(errorText);
-            }
 
-            string[] fileContents = File.ReadAllLines(filename);
-            using Process process = new();
+            await api.StartGame();
             
-            string args = "";
-            if (fileContents.Length == 2)
-                args = fileContents[1];
-            
-            process.StartInfo = new()
-            {
-                FileName = fileContents[0],
-                Arguments = args + " " + Path.Combine(dataDir, "Iso")
-            };
-            process.Start();
-            process.WaitForExit();
             //MessageBox.Show($"Game files repacking completed in {watch.ElapsedMilliseconds} ms", "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex) {
@@ -341,15 +310,7 @@ public partial class FormMain : Form {
     }
 
     private void buttonStartGameHelp_Click(object sender, EventArgs e) {
-        MessageBox.Show("" +
-            "This isn't necessarily a stage" + Environment.NewLine +
-             "Just a utility button that helps you test your changes after packing the game" + Environment.NewLine +
-             "You can configure this process with the StartGame.conf" + Environment.NewLine + 
-             "Put the path of the executable on the first line and the args on the second" + Environment.NewLine +
-             "The path of the Iso folder will be appended to the arguments" + Environment.NewLine +
-             "Example:" + Environment.NewLine +
-             "{executable}" + Environment.NewLine +
-             "{arguments}" + Environment.NewLine,
+        MessageBox.Show(RyuujiApi.RyuujiApi.StartGameHelpText, 
             "ToradoraTranslateTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
     

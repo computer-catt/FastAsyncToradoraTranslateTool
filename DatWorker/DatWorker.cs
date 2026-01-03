@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using MakeGpda;
+using CppPorts;
 using Newtonsoft.Json;
 using tenoriTool;
 
@@ -33,7 +33,7 @@ public class DatWorker(string workingDir) {
             }
             
             // unpack
-            DatTree datTree = new(GetDatLstDir(arg));
+            DatTree datTree = new(GetDatLstDir(arg)[workingDir.Length..]);
             await OpenDat(arg, datTree);
             await File.WriteAllTextAsync(arg + "-LstOrder.lst", JsonConvert.SerializeObject(datTree, settings));
             Console.WriteLine($"Done unpacking {arg}");
@@ -57,7 +57,7 @@ public class DatWorker(string workingDir) {
             List<Task<DatTree>> taskList = [];
             foreach (string file in files)
                 if (Path.GetExtension(file).ToLower().Trim(' ', '.') == "dat")
-                    taskList.Add(OpenDat(file, new (GetDatLstDir(file))));
+                    taskList.Add(OpenDat(file, new (GetDatLstDir(file)[workingDir.Length..])));
 
             await Task.WhenAll(taskList);
 
@@ -71,7 +71,7 @@ public class DatWorker(string workingDir) {
             return parent;
         }
         catch (Exception e) {
-            Console.WriteLine(e.Message);
+            Console.WriteLine(e);
             throw;
             //return false;
         }
@@ -79,26 +79,25 @@ public class DatWorker(string workingDir) {
 
     private async Task<string[]> ExtractDatContent(string dat) {
         string newDir = Path.Combine(workingDir, Path.GetDirectoryName(dat)!, Path.GetFileNameWithoutExtension(dat));
-        if (newDir.StartsWith("\\"))
+        if (newDir.StartsWith('\\'))
             newDir = "." + newDir;
 
         TenoriToolApi.TenoriCallbacks callbacks = TenoriToolApi.TenoriCallbacks.None();
         TenoriToolApi.ProcessReturn processReturn = await TenoriToolApi.ProcessIndividualExtract("", newDir, false, true, "", dat, callbacks);
         if (!processReturn.Success) return null;
-        //File.Delete(dat);
-        string txt = processReturn.MakeGpdaFileContent;
+        File.Delete(dat);
 
         string lst = GetDatLstDir(dat);
         if (lst.StartsWith('\\'))
             lst = "." + lst;
 
         if (File.Exists(lst)) File.Delete(lst);
-        await File.WriteAllTextAsync(lst, txt);
+        await File.WriteAllTextAsync(lst, processReturn.MakeGpdaFileContent);
 
         return Directory.GetFiles(newDir, "*", SearchOption.AllDirectories);
     }
 
-    private static string GetDatLstDir(string file) => Path.GetDirectoryName(file) + "\\" + Path.GetFileNameWithoutExtension(file) + ".lst";
+    private static string GetDatLstDir(string file) => Path.GetDirectoryName(file) + '/' + Path.GetFileNameWithoutExtension(file) + ".lst";
 
     #endregion
 
@@ -110,16 +109,17 @@ public class DatWorker(string workingDir) {
                 tasks.Add(SaveDat(workingDir, tree));
             await Task.WhenAll(tasks);
         }
-        
-        if (!File.Exists(datTree.Name)) return false; 
-        _ = Console.Out.WriteLineAsync($"Repacking: {datTree.Name}"); // It's okay! il catch you guys later
-        await RepackDat(workingDir, datTree.Name);
+
+        string realpath = Path.Join(workingDir, datTree.Name);
+        if (!File.Exists(realpath)) return false; 
+        _ = Console.Out.WriteLineAsync($"Repacking: {realpath}"); // It's okay! il catch you guys later
+        await RepackDat(workingDir, realpath);
         return true;
     }
 
     private static async Task<bool> RepackDat(string workingDir, string lst) {
         try {
-            string lstDir = Path.GetDirectoryName(lst) + "\\";
+            string lstDir = $"{Path.GetDirectoryName(lst)}/";
             if (lstDir.StartsWith("\\"))
                 lstDir = '.' + lstDir;
 
@@ -128,11 +128,11 @@ public class DatWorker(string workingDir) {
 
             string file = lstDir + Path.GetFileNameWithoutExtension(lst);
             
-            await MakeGpdaApi.MakeGpda(file, lstDir);
+            await MakeGpda.Process(file, lstDir);
             return true;
         }
         catch (Exception e) {
-            Console.WriteLine(e.Message);
+            Console.WriteLine(e);
             throw;
             //return false;
         }

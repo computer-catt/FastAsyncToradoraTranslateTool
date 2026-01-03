@@ -1,20 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
     <LangVersion>default</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Configurations>Debug;DebugTests;Release</Configurations>
-    <AssemblyTitle>DatWorker</AssemblyTitle>
-    <Product>DatWorker</Product>
-    <Copyright>Copyright ©  2025</Copyright>
+    <AssemblyTitle>TenoriTool</AssemblyTitle>
+    <Product>TenoriTool</Product>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Configuration>Debug</Configuration>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CppPorts\CppPorts.csproj" />
     <ProjectReference Include="..\TenoriTool\TenoriTool.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 </Project>

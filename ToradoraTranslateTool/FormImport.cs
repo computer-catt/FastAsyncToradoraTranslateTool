@@ -10,9 +10,9 @@ public partial class FormImport : Form
         InitializeComponent();
     }
 
-    public int Column { get; set; }
-    public int Cell { get; set; }
-    public string Filename { get; set; }
+    public int Column;
+    public int Cell;
+    public string Filename;
 
     private void buttonOk_Click(object sender, EventArgs e)
     {

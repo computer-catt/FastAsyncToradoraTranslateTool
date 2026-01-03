@@ -1,0 +1,1 @@
+﻿new DatWorker.DatWorker(Directory.GetCurrentDirectory()).Process(args).Wait();
